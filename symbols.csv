@@ -1,0 +1,272 @@
+Address,Name,Subsystem,Status,Description
+0x001003bc,Weather_InitWeatherHeap,Weather,done,Initializes heap for weather sub-system
+0x00100684,Time_StateManagerUpdateTick,Time,partial,"Per-frame update tick for a state manager object. Flushes pending state transitions across multiple subsystems, then che"
+0x001009e4,Weather_CleanupWeatherHeap,Weather,done,Cleans up and destructs weather heap objects
+0x00112584,Town_GridSubObjectConstructor,Town,partial,"First sub-ctor called in FUN005ca4f4's chain, at param1 = iVar1 + 0x29200 (where iVar1 is the cursor after the initial D"
+0x00114e10,Town_AdvanceFloraGrowthForPlayableAcres,Town,partial,"AUDIT 2026-09-07: does NOT iterate all 20 acres -- picks ONE random eligible acre via bounded RNG and processes it via Town_ProcessFloraTileGrid, then returns early. See systems/flora-growth.md."
+0x001175bc,Town_BsGrowUp_UpdateDailyFloraGrowth,Town,done,Main daily flora tick: checks rain/snow weather to auto-water all flowers and triggers acre flora update.
+0x001176c4,Town_BsGrowUp_CheckDayChange,Town,done,Monitors GameDateTime day-of-month and executes acre scan when date advances.
+0x0011d538,Core_Main_EntryPoint,Core,partial,"Application entry point. Initializes core services, waits for applet readiness, then enters the main game loop via FUN00"
+0x0011e3d8,Core_AppServiceInitializer,Core,partial,Initializes core 3DS OS services required before the game loop starts. Contains IPC calls via SVC 0x24 (WaitSynchronizat
+0x0011edfc,Core_MainGameLoop,Core,partial,The main game loop / application lifecycle function. Manages three initialization phases (tracked via bytes in appstate)
+0x00124120,Time_ConvertDateToTicks,Time,done,Converts a date object to a 64-bit tick representation. Called as Phase 1 of FUN00308F5C before tick-space arithmetic.
+0x00124154,Time_ConvertTicksToWallClock,Time,done,Computes current wall-clock time by combining: 1. Elapsed ticks since startup (from FUN0012994C) 2. Base wall-clock time
+0x00126514,Time_ConvertTicksToDate,Time,done,Converts a 64-bit tick value back to a date struct. Inverse of FUN00124120. Core utility for the entire date arithmetic
+0x001296bc,Time_CalculateJulianDay,Time,partial,Converts a broken-down date/time into a single 64-bit integer timestamp. Used as the foundation of all date arithmetic i
+0x0012994c,Time_ReadCalibratedSystemTicks,Time,partial,Returns the current time as a 64-bit tick count derived from the 3DS system tick counter. Critically: this is not a dire
+0x0012a53c,Core_ServiceHandleWaitIpcInit,Core,done,"Waits for a service handle to become ready (SVC 0x24 = WaitSynchronization1), then proceeds to open the service port via"
+0x0012cc9c,Save_CleanupSaveDataBuffer,Save,partial,"Destructor / cleanup function for the gardenplus.dat save buffer. Checks if the buffer is loaded, calls C++ destructors"
+0x0012f8a0,Time_JulianDayNumberCalculator,Time,partial,"Converts a calendar date to a Julian Day Number (or equivalent day-count integer), using an epoch anchored at year 2000."
+0x0012f998,Time_JulianDaySubFieldCalculator,Time,done,"Computes a tick/Julian Day value from (year, month, dayfield). Variant of FUN0012F8A0 used specifically for sub-field no"
+0x0019f2f4,UI_BsMenuItem_DrawPocketsUI,UI,done,Dispatches 2D lyt layout rendering for 16 pocket item slots and active item cursor.
+0x0019f37c,UI_BsMenuItem_InitPocketsMenu,UI,done,"Initializes 16 pocket item icon sprites, equips hand slot layout, and binds touch callbacks."
+0x0019f768,UI_BsMenuItem_UpdatePocketsTouchAndButtons,UI,partial,"AUDIT 2026-09-07: real code is a generic focus/dirty-flag dispatcher (toggles state bits, calls a vtable callback + two redraw calls at +0xE0/+0xD44). No drag-and-drop, fruit stacking, or context-menu logic found. See systems/inventory.md."
+0x0019fa5c,UI_BsMenuItem_ClosePocketsMenu,UI,done,"Closes pockets menu, saves inventory ordering to active player buffer, and resumes gameplay."
+0x001af1d8,Save_SaveSystemPerFrameTick,Save,partial,"Per-frame wrapper around the save state machine. Prepares context, calls the dispatcher, then executes a virtual callbac"
+0x001b8b9c,Save_ReadSaveFileRaw,Save,partial,Generic low-level file reader. Implements the full open → seek → read → verify → close cycle against the nn::fs API. Ret
+0x001b927c,Save_MountSaveArchive,Save,partial,"Mounts the save data archive via nn::fs using the ""data:"" virtual drive. Sets a global busy flag before mounting. Return"
+0x001b9428,Save_CheckSaveMount,Save,partial,"Pre-flight check before reading gardenplus.dat. Verifies the save archive is accessible and mounts ""data:"" if needed. Re"
+0x001b96c8,Save_LoadGardenPlusFile,Save,done,Reads the entire gardenplus.dat save file into the runtime save buffer.
+0x001d3748,Save_DispatchSaveLifecycle,Save,partial,This function implements a state machine for resource loading. It manages the transition from raw data loading to struct
+0x001d3d3c,Save_DispatchSaveLoadStateMachine,Save,partial,Per-tick dispatcher for the save system state machine. Extracts state bits [1:5] from param3 (uVar4 = param3 & 0x3e) and
+0x001e0340,Core_ConstructSmallMapStateObject,Core,done,"Minimal constructor - zeroes 3 uint32 fields and 1 uint16 field at offset +0x22, then calls FUN0027a490."
+0x001e5bc8,Weather_InitializeWeatherSystem,Weather,done,"Initializes the entire weather system: loads all four shaders, then populates a set of weather data tables from an exter"
+0x001e5eb0,Weather_GetSeasonParameter,Weather,done,"Queries a 4-byte property from the 23-period season parameter table (DAT_00951138, 0x28 bytes per period)."
+0x001e5ef4,Weather_PeriodicWeatherUpdate,Weather,partial,Per-frame tick that throttles weather parameter updates to every 300 frames (~5 seconds at 60fps). When the counter expi
+0x001e63dc,Weather_InterpolateWeatherEnvironment,Weather,partial,"Per-frame weather update. Reads current and next weather state indices from a time/date object, interpolates all weather"
+0x001e6fe0,Weather_CompositeSkyColors,Weather,partial,Blends up to 10 weighted sky color layers and pushes the results as GPU uniforms to PICA200. This is the per-frame sky r
+0x001e82e0,Weather_ResolveWeatherGroupIndex,Weather,done,"Maps (weathertype, periodindex) → groupindex into EnvironmentParameter.bin."
+0x001e8518,Weather_ImmediateWeatherStateUpdater,Weather,partial,"Called on weather state transitions (not periodically). Resets weather object fields, sets cloud parameters, then calls"
+0x001e9e68,Fish_AcFsFdShadow_StateHit_Update,Item,done,"Ticks reel-in reaction timer. If player fails to press A before timer expires, fish transitions to Escape state."
+0x001ea010,Fish_AcFsFdShadow_StatePick_Update,Item,done,"Evaluates 20%-per-nibble bite formula: P(Bite) = nibble_count * 20%. Nudges bobber on fail, bites on success."
+0x001eb5e4,Fish_AcFsFdShadow_StateHit_Enter,Item,done,"Submerges bobber underwater, triggers splash SFX, and computes frame reel-in reaction window (seconds * 30.0)."
+0x001eb920,Fish_AcFsFdShadow_StatePick_Enter,Item,done,Enters Pick state: orients fish shadow towards detected player fishing bobber.
+0x001ebc08,Fish_AcFsFdShadow_StateEscape_Enter,Item,done,Increases swimming speed by 3x and plots escape trajectory away from player before entity despawn.
+0x001ec774,Fish_AcFsFdShadow_UpdateSwimmingAI,Item,done,12-state fish AI state machine dispatch and Euclidean player-distance check for running footstep spooking.
+0x001f4b0c,Actor_AcObjectBase_Draw,Actor,done,Draw dispatch: invokes model component draw (+0x18) and renders dynamic ground shadow ellipse via FUN_006EE3CC.
+0x001f4b94,Actor_AcObjectBase_UpdatePhysics,Actor,done,"Velocity integration (pos += vel), ground elevation clamping via Town_SampleFlatGroundHeight, and affine model transform calculation."
+0x001f4cc4,Actor_AcObjectBase_Init,Actor,done,"Two-phase initialization of world entity: calculates acre coordinates (X/Z / 256), samples terrain elevation, registers in spatial acre grid."
+0x001f4de8,Actor_AcObjectBase_Update,Actor,done,"Per-frame entity tick: resets visual offset, executes behavior state machine (+0x60), updates physics/movement (+0x64), and calls post-update hook (+0x50)."
+0x001f4ebc,Actor_AcObjectBase_BuildMatrix,Actor,done,Constructs 4x3 affine transform matrix from position Vector3 and applies XYZ Euler rotation angles via trigonometric LUT.
+0x001f50c0,Actor_AcObjectBase_Dtor,Actor,done,Deleting destructor for AcObjectBase. Invokes Actor_Actor_Dtor and deallocates instance memory via operator delete.
+0x00200d34,Town_FieldFactory_CreateBuilderForState,Town,done,"Master factory dispatcher (dFieldFactory.cpp) that instantiates the appropriate FieldBuilder (VillagePrologueBuilder, MuseumBuilder, CampNpcBuilder, etc.) based on game state flags."
+0x00229684,Weather_UpdateRainParticles,Weather,done,Updates rain particle simulation state
+0x0022a9c8,Weather_UpdateSnowParticles,Weather,done,Updates snow particle simulation state
+0x0022eba4,Time_PeriodicTimerCheck,Time,flagged,Address does not resolve in Ghidra (re-audit 2026-09-07) - was: Timer/tick-based check function. Uses SVC 0x28 (GetSystemTick) and divides by 0x1a/0x5a constants. Calls FUN00300fdc onl
+0x00244884,Time_SetdatetimebgConstructor,Time,partial,Constructor for the SetDateTimeBg UI screen - the in-game date/time settings screen. Sets up UI components: input fields
+0x0024f314,Insect_AcInsectFieldBase_LoadSpeciesParams,Item,done,Loads 80-byte (0x50) physics and behavior record from table 0x0086773C for insect species (0..71).
+0x002526a0,Fish_BsFishFieldMgr_SelectAndSpawnFish,Item,done,Queries cumulative probability table for river/ocean based on current time/date and spawns fish species.
+0x00253a08,Fish_BsFishFieldMgr_TickSpawns,Item,done,Enforces 8-fish maximum concurrency in town (river + ocean < 8) and ticks spawn timer.
+0x00253f54,Fish_BsFishFieldMgr_AllocateFishSlot,Item,done,"Packs 6-byte state into one of 8 active fish slots ('T'..'['), packing 10-bit world X/Z coordinates."
+0x002554a4,Fish_BsFishFieldMgr_UpdateFishLoop,Item,done,Main update tick for fish manager: processes active fish pool and checks player bobber proximity.
+0x002663f0,Weather_UpdatePaperParticles,Weather,done,Updates confetti/paper particle simulation state
+0x0027c2cc,Town_GenerateTownOptions_Main,Town,partial,Master town generation driver. Loads sea_side templates from RomFS and loops Rover generator until 4 valid layouts are found (internal validation criteria unconfirmed, see functions/ audit note).
+0x0027c56c,Town_LoadVillageTemplateResources,Town,partial,Async resource loader: loads Bg/Outdoor/Textures/GrassBaldness.bcres and then kicks off async loads of TemplateData/vill
+0x0027c8fc,Town_GenerateTownLayout_4Options,Town,partial,"Generates candidate town seed. 3-state layout generator with internal validation counters; exact semantics of validation counts (villagers/plaza/hall) unconfirmed by bytes, see functions/ audit note."
+0x0028de1c,Save_DispatchSaveWriteStateMachine,Save,partial,"State machine dispatcher with a save write path. At case 1, calls FUN00300fdc to access the save buffer - likely the wri"
+0x002960d0,Weather_UpdateSakuraParticles,Weather,done,Updates cherry blossom sakura particle simulation
+0x002abfe0,Insect_BsInsectFieldMgr_CheckWeatherDespawn,Item,done,Checks rain and snow weather flags; automatically despawns flying ('A') and ground ('F'/'G') insects.
+0x002acb7c,Insect_BsInsectFieldMgr_UpdateBugLoop,Item,done,Main update tick for insect manager: manages 12 concurrent slots ('H'..'S') and updates active bug AI.
+0x002b32f4,Town_InitBsMenuMapVillage,Town,partial,State machine (states 0-10) that loads and initialises the Town Map menu screen (Nook's Homes / Town Hall bulletin board
+0x002b385c,Town_LookupTownMapPane,Town,partial,"Looks up the single named layout pane ""Pmp00"" within the loaded mapvillage.arc layout (state 8 of FUN002b32f4's init sta"
+0x002c28b4,Insect_AcInsectFieldFly_CheckNetCatchOverlap,Item,done,Evaluates player bug net swing collision sphere against insect collision radius.
+0x002c2d94,Insect_AcInsectFieldFly_UpdateAltitude,Item,done,Adjusts flying bug flight altitude relative to sampled terrain elevation and flower attachment.
+0x002ca040,Town_VillageIslandTemplateResourceLoader,Town,partial,"Larger sibling of FUN0027c56c: same grass-baldness/village-template setup, then loops 18 times (uVar15 <= 0x11, i.e. ind"
+0x002cd508,Save_ReadExhibitionFile,Save,done,Thin wrapper. Reads /exhibition.dat into the buffer pointed to by param1.
+0x002d457c,Town_ConstructFieldTownObject,Town,partial,C++ placement constructor for a POD (no vtable) sub-object inside the FUN005ca4f4 save-buffer construction chain. Called
+0x002f72bc,Time_HandleStateTransition,Time,partial,"Handles state transitions for a game object. Checks active state via vtable calls, updates state tracking fields at offs"
+0x002f744c,Core_FlushPendingStateTransition,Core,partial,"Flushes a pending state transition in a state slot object. If a transition is pending (+4 != 0), processes it and resets"
+0x002f7510,Core_ReleaseVtableObject,Core,partial,"Releases an object stored in a slot by calling its destructor via vtable +0x10, then nulls the pointer. Identical patter"
+0x002f753c,Core_DirtyFlagCheckAndClear,Core,done,Checks and clears dirty flag pair in state machine
+0x002f755c,Core_GetStateIndex,Core,partial,"Returns the current state index of a global game object. This is a simple getter - no logic, no RNG. The byte at offset"
+0x002f7574,Core_CheckStateFlag,Core,partial,"Checks whether specific bits (defined by mask) are set in a static flag table, at position index. Returns 1 if the flags"
+0x002f7740,Core_DestructorBackwardIterator,Core,done,Generic backward iterator that calls a function pointer on each element from last to first. Used as the destructor patte
+0x002faec0,Core_ErrorAbortHandler,Core,done,c int FUN002faec0(void) { FUN00606c24(); FUN006064bc(); return DAT002faedc + 0x80; }
+0x002fb34c,Save_GetSaveBufferPointer,Save,done,c undefined4 FUN002fb34c(void) { return DAT002FB358; }
+0x002fb39c,Time_GetTimeSingletonPrimary,Time,partial,Returns the global time object pointer stored at DAT002FB3A4. This is a singleton getter - the actual object is initiali
+0x002fb860,Core_GetSmallMapStateObject,Core,done,"c int FUN002fb860(void) { FUN00606c24(); FUN006064bc(); // pre-check, same as FUN00300fdc pattern return DAT002fb880 + 0"
+0x002fd108,Core_HeapAllocate,Core,done,"Core heap allocator operator new(size, heap, align) delegating to sead::Heap::alloc."
+0x002fd4a0,Time_CalculateSignedPeriodDelta,Time,partial,"Converts two time objects to 64-bit millisecond timestamps via FUN001296BC, subtracts them, and divides by a period leng"
+0x002ff304,Save_ConstructPlayerSubStruct640B,Save,partial,Zero-initialises and constructs a 640-byte (0x280) save sub-struct. Called 10+1 times per player region by FUN006f4234.
+0x002ffd1c,Town_ProcessFloraTileGrid,Town,done,"Scans 16x16 tile grid of an acre: advances sapling stages 0..3, wilts unwatered flowers, breeds hybrids."
+0x00300fdc,Save_GetSaveBufferWithPreCheck,Save,partial,Second getter for the gardenplus.dat runtime buffer. Calls FUN006064bc as a pre-flight check before returning the buffer
+0x00301ebc,Town_CheckVillagerSlotValidity,Town,done,Called from FUN005c9a24 (villager slot reader) as the per-slot gate that decides whether a villager slot is occupied/val
+0x00303d80,Player_ConstructPlayerTailObject,Player,in_progress,Initialises a different-typed object at offset +0x1b80 within the player region. Called once per player by FUN006f4234 a
+0x00304f70,Save_Thunk_AllocateAndConstructSaveBuffer,Save,done,Thunk redirecting to Save_AllocateAndConstructSaveBuffer (0x005c9dd4)
+0x0030601c,Core_ReadGameStateFlag,Core,partial,Reads a single byte from the main game state object at a fixed offset. Used as a condition gate in FUN0062eee8 - if resu
+0x00308f5c,Time_NormalizeDate,Time,done,Normalizes a date object in-place. Called by FUN0062EF1C on both the input date and the current time before comparison.
+0x0030c2c8,Weather_Thunk_ResolveWeatherType_Alt,Weather,done,Thunk redirecting to weather type calculation
+0x00312a5c,Time_DateOffsetCalculator,Time,partial,Adds signed offsets (year/month/day/hour) to a date struct in-place. Uses 64-bit arithmetic internally for overflow hand
+0x0031872c,Time_ShiftDateMinus6Months,Time,partial,"The ""normal path"" period calculator. Copies the input date, shifts it back by 6 months via FUN00312a5c, then falls throu"
+0x00319340,Save_CalculateCrc32_SaveBuffer,Save,done,"Takes (buffer_ptr, size, initial_crc=0xffffffff). Used across all save-buffer integrity checks."
+0x0032c96c,Insect_AcInsectFieldFlyPursue_Dtor,Item,done,Destructor for wasp / bee swarm pursuer entity spawned from shaken trees.
+0x0047dac0,Save_DecryptSaveXor,Save,partial,"Processes a buffer using a 256-entry XOR lookup table. Applied to gardenplus.dat after raw read, before parsing. Returns"
+0x0056a74c,Time_PeriodicTimeUpdater,Time,done,Periodically updates the global time singleton object at DAT0056a928 → 0x00AD46B0. This is the function that keeps the i
+0x0056aa90,Time_ConvertHardwareRtcToGameDate,Time,partial,"NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056aa90) despite done status here. Real decompile calls Time_JulianDaySubFieldCalculator/ConvertTicksToDate/ConvertTicksToWallClock - plausible but unconfirmed RTC link, no direct SVC call visible."
+0x0056abe0,Time_GetEpochDate2012,Time,partial,"NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056abe0) despite done status here. Body not re-verified this pass."
+0x0056ac80,Time_GetSeasonPeriodIndex,Time,done,Returns a period index (0-22) representing where the current date falls within the annual season calendar. Used by FUN00
+0x0056bbd4,Time_NormalizeYearRange_2050Limit,Time,done,This function is the direct source of the 2050 date limit.
+0x0056bfd8,Time_Check6AmDailyRolloverBoundary,Time,partial,"FABRICATED description (audited 2026-09-07): NOT renamed in Ghidra (still FUN_0056bfd8). Real decompile has nothing to do with hour/6AM - it validates year>=2012 and month/day fields then calls Core_ErrorAbortHandler on failure. See systems/time-engine.md audit note."
+0x0056c288,Time_SetPlayerTimeTravelOffset,Time,partial,"NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056c288) despite done status here. Real decompile plausibly matches (writes offset, clamps [2012,2050] via NormalizeYearRange_2050Limit) but 'title screen settings' origin is inferred, not confirmed from callers."
+0x0056c344,Save_ReadClockHeaderRecord,Save,partial,"NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056c344) despite done status here. Body not re-verified this pass."
+0x005b2fe0,Weather_MapStateIndexToWeatherType,Weather,done,Converts a raw state index (from FUN002F755C) into a weather type integer used by the record index formula in FUN001E63D
+0x005c96a0,Core_IncrementNonZero64BitCounter,Core,done,"Increments a 64-bit counter (DAT005c96dc as {uint32 lo; uint32 hi;}) by 1, with special-case logic to skip the value 0 o"
+0x005c9760,Save_LoadLazySaveResource,Save,partial,c void FUN005c9760(void) { puVar1 = DAT005c97b4; // struct ptr if (DAT005c97b4[1] == 0) { // lazy-init check: not yet lo
+0x005c9a24,Town_ReadVillagerSlots,Town,partial,"Iterates over all 10 villager slots in the save buffer. For each slot, reads a uint16 field at offset +0x2c and writes i"
+0x005c9d64,Save_GetGardenPlusBufferPointer,Save,done,Trivial getter. Returns the current runtime pointer to the gardenplus.dat in-memory buffer.
+0x005c9dd4,Save_AllocateAndConstructSaveBuffer,Save,partial,"Allocates the runtime save buffer, constructs C++ objects in-place, then initializes their fields. Paired with FUN0012cc"
+0x005ca2c4,Town_ResetSaveBuffer_AllSubObjects,Town,partial,"Resets TownAcres, playable grids, villager array, and player slots to default values. [audit 2026-09-07: one call was misattributed, list was non-exhaustive — see functions/005CA2C4_*.md]"
+0x005ca4f4,Save_SaveObjectMasterConstructor,Save,partial,The primary C++ object constructor for the gardenplus.dat buffer. Called from FUN005c9dd4 with param1 = buffer + 0x80. C
+0x005ccdc8,Save_SaveBufferSubRegionConstructor,Save,partial,"Initialises the C++ object region immediately after the 167,936-byte raw data block in the save buffer. Called from FUN0"
+0x006064bc,Save_PreCheckSaveBuffer,Save,in_progress,Called by FUN00300fdc immediately before returning the save buffer pointer. Purpose unknown - likely an assertion or val
+0x006079b8,Core_UiRenderingFunction,Core,partial,Performs rendering or UI operations using a sub-object at param1 + 0x18. Calls FUN00300fdc but discards the return value
+0x00611d34,Town_SetDefaultAcreId_109,Town,done,Sets uint16 acre ID to 0x109. Called for all 42 entries in the 7x6 TownAcres grid.
+0x00612820,Town_InitTownGridAndAcres,Town,done,SOLVED TOWN ACRES RUNTIME HANDLER. Initializes 7x6 TownAcres (0x53484) and 5x4 playable acres.
+0x0061494c,Weather_GetWeatherPatternData,Weather,partial,Returns a pointer to the global weather data source object. The object contains weather pattern records of size 0x8C (14
+0x0062e084,Weather_Thunk_ResolveWeatherType,Weather,partial,Not a thunk (audited 2026-09-07) - full duplicate of the 52x24 weather-type table lookup in FUN0062E094 but using current time singleton instead of explicit date param
+0x0062e094,Weather_ResolveWeatherType_52x24,Weather,partial,Resolves weather type byte from a 52x24 lookup table indexed by period index (0-51) and normalised hour (0-23). Called t
+0x0062ebc4,Weather_GetPrecipitationRateForType,Weather,done,Returns base precipitation particle density float from 7-entry LUT for weather type (0-6).
+0x0062ebe0,Weather_GetWindSpeedForType,Weather,done,Returns base wind speed float from 7-entry LUT for weather type (0-6).
+0x0062eee8,Weather_ResolvePeriodIndexFromDate,Weather,done,Computes the current weather period index from a date object and stores it in the singleton DAT002FB358. Always terminat
+0x0062ef1c,Weather_ResolveWeatherPeriodIndex,Weather,partial,"Given a date object (param1), resolves and returns a period index used by the weather table lookup system (FUN0062E094)."
+0x0062efd4,Weather_ResolveIslandWeatherWeekIndex,Weather,done,"Resolves weather row for Tortimer Island using 3-day cyclic table [4, 21, 33] indexed by JulianDay % 3."
+0x0068b9bc,Player_AcPlayer_Draw,Player,done,"Renders player character model, applies texture swaps for facial expressions, and projects dynamic circular shadow with radius scaled by 13.0f."
+0x0068C0EC,Player_UpdateMovementPhysics,Player,done,Snaps player vertical elevation to town heightmap resolves collision against obstacles and updates physics
+0x006a0c58,Npc_BsNpcMgr_UpdateVillagers,Npc,done,"Manager tick iterating over town's 10 villager slots: updates wander pathfinding, home/outdoor presence, and interaction state."
+0x006a3578,Core_DispatchCroModule,Core,done,Dispatches .cro dynamic modules based on current game state flags. Called during scene transitions. Reads state via FUN0
+0x006a506c,Town_InitializeCurrentStateField,Town,done,"Initializes the active field/world map for current state transition, invoking Town_FieldFactory_CreateBuilderForState and setting active field pointers."
+0x006c478c,Town_CheckTileAllowsFloraGrowth,Town,done,Queries terrain tile collision type against soil bitmask DAT_0095cd1a to test if trees/flowers can grow.
+0x006d0eac,Core_GetStateTransitionContext,Core,partial,"Simple one-liner getter. [audit 2026-09-07: prior doc's pointer-offset pattern and caller layout claims did not match live decompile — see functions/006D0EAC_*.md]"
+0x006e1d70,Core_NetworkSessionObjectHandler,Core,partial,Reads fields from a large object at param1 (offsets 0x2768-0x27c6) and interacts with network-layer functions. Calls FUN
+0x006eed70,Town_InitPlayableAcreTileGrid,Town,done,Initializes 16x16 tile grid (0x400 bytes) for a playable acre. Stride row*0x40 + col*4 (4B/tile)
+0x006f4234,Save_PlayerRegionSubObjectInitializer,Save,done,Initialises the array of 10+1 sub-structs within a player's save region. Called once per player in FUN005c9dd4's 4-playe
+0x006f7c54,Core_GetStateSubObjectFlag4000,Core,done,Returns a state-specific sub-object if bit 0x4000 is set for the given state index. Used in FUN005B2FE0 to handle weathe
+0x0070d894,Town_UiStringBuilderForSaveFileLabels,Town,partial,"[audit 2026-09-07: prior /garden.dat string-source claim did not match live decompile — see functions/0070D894_*.md]"
+0x0071ee44,Save_SaveBufferErrorAbort,Save,done,"Calls FUN00300fdc (result unused) then immediately calls the non-returning FUN002faec0. This is an error/abort path, not"
+0x0071f3ec,Core_ReadStructArrayLevelField,Core,done,"Reads a single byte from a struct array: field +0x36 of element param2. Used to check ""level"" values for state sub-objec"
+0x00756c34,Save_SerializeSaveBuffer_CalculateChecksums,Save,done,"Calls CalculateSubObjectChecksums across all save regions, then updates small map state."
+0x00756c54,Save_DeserializeSaveBuffer_ValidateChecksums,Save,done,Calls ValidateSubObjectChecksums to verify CRC32 of all save sub-objects on load.
+0x00756f20,Town_CalculateSubObjectChecksums,Town,done,Calculates CRC32 over 0x1E4D8 bytes of Field/Town data and writes it to buffer + 0x53424.
+0x00756f90,Save_ValidateSubObjectChecksums,Save,done,Verifies that stored CRC32 at buffer + 0x53424 matches recalculated CRC32 over 0x1E4D8 bytes.
+0x0076dfac,Save_VerifySaveFileCrc32,Save,partial,"Verifies the CRC32 checksum of a save-file buffer. [audit 2026-09-07: length was wrongly claimed to be a variable-per-filetype DAT_ symbol; it's a hardcoded 0x25f8c at this call site — see functions/0076DFAC_*.md]"
+0x007b0ba0,Core_GetAppServicePointer,Core,done,Fetches APT service handle for App module
+0x005D3734,System_GetLanguageIndex,System,done,Resolves hardware region (Japan=0 USA=1 Europe=2) and language to return game language index (0..9) for MSBT localization
+0x00159A30,Msg_MsbtFile_Init,Script,done,Initializes MSBT (Message Studio Binary Text) parser validating MsgStdBn magic BOM and mapping LBL1 TXT2 ATR1 ATO1 TSY1 sections
+0x001599A8,Msg_MsbfFile_Init,Script,done,Initializes MSBF (Message Studio Binary Flow) parser validating MsgFlwBn magic BOM and mapping FLW3 FEN1 REF1 sections
+0x00159AF0,Msg_MsbpFile_Init,Script,done,Initializes MSBP (Message Studio Binary Project) parser validating MsgPrjBn magic and resolving CLR1 CLB1 CTI1 sections
+0x00159C74,Msg_Header_ParseSections,Script,done,Parses 32-byte MSB header validates BOM 0xFEFF and loads 16-byte aligned section descriptors
+0x00159F08,Msg_FindSectionByTag,Script,done,Searches section table by 4-byte FourCC tag (LBL1 TXT2 FLW3 FEN1) returning section index or 0xFFFFFFFF
+0x00159718,Msg_GetSectionDataPtr,Script,done,Returns bounds-checked pointer to raw data within an MSB section given relative byte offset
+0x00159DE4,Msbt_CalculateLabelHash,Script,done,Computes multiplicative hash (accumulator * 1170 + char) modulo bucket count for LBL1 label lookup
+0x001598AC,Msbt_FindStringIndexByLabel,Script,done,Searches LBL1 label hash bucket for matching key string and returns 32-bit string index or 0xFFFFFFFF
+0x00159804,Msbt_GetStringByIndex,Script,done,Retrieves pointer to UTF-16LE text string from TXT2 section by 0-based string index
+0x00159848,Msbt_GetStringByLabel,Script,done,Convenience lookup combining label hash search and TXT2 pointer extraction returning UTF-16 string
+0x00159750,Msbt_GetLabelNameByIndex,Script,done,Performs reverse lookup in LBL1 table finding label key string corresponding to given string index
+0x005B07B8,Msg_MsbtWrapper_Load,Script,done,Allocates wrapper descriptor and binds MSBT binary buffer pointer
+0x005B0854,Msg_MsbfWrapper_Load,Script,done,Allocates wrapper descriptor and binds MSBF binary buffer pointer
+0x005B0870,Msg_MsbfWrapper_Destroy,Script,done,Releases MSBF wrapper descriptor and clears buffer references
+0x005B0898,Msg_MsbfWrapper_Clear,Script,done,Zeroes out internal wrapper buffer and state fields
+0x00523378,Msg_LoadSwkbdMsbt,Script,done,Loads software keyboard localized text swkbd.msbt and style RI.mstl based on active language index
+0x00159634,Msbf_FindEntryPointNode,Script,done,Looks up entry point name in FEN1 hash table and returns root node index for flowchart execution
+0x005F305C,FlowSeq_ExecuteActionNode,Script,done,Executes Type 2 action node in MSBF flowchart invoking receiver hook and advancing next node
+0x005F2A4C,FlowSeq_StepBranchNode,Script,done,Evaluates boolean condition in MSBF branch node and transitions to appropriate destination node
+0x005F2AFC,FlowSeq_StepMultiBranchNode,Script,done,Evaluates multi-way choice table in MSBF flow resolving player dialogue choice index to target node
+0x005F29A4,FlowSeq_StepToNextNode,Script,done,Advances sequential MSBF flowchart node index or flags flow sequence completion
+0x005F2614,FlowSeq_ExecuteMessageNode,Script,done,Unpacks Type 1 message node binds dialogue string and opens villager text box with emotion animation
+0x00600EE4,TalkEngine_ResetDialogueBuffer,Script,done,Resets active dialogue state machine clears string buffers and closes speech window
+0x00601664,TalkEngine_LoadActiveDialogue,Script,done,Loads localized UMSBT file for active villager personality selects language stream and binds to talk state
+0x001E5218,Shop_AddSpendingAndCheckUpgrade,Shop,done,Deducts purchase amount from remaining upgrade quota and evaluates spending and days-open thresholds from 0x0088E5E4 and 0x0088E5F8 to advance store tier
+0x001E5494,Shop_RecordPurchase,Shop,done,Records store spending transaction updates save buffer and triggers town persistence
+0x001E4EC8,Shop_ApplyTierUpgrade,Shop,done,Applies store upgrade sets new tier index resets renovation timer and reallocates daily inventory slots
+0x001E5628,Shop_PostRenewalBbsNotice,Shop,done,Formats and posts store renovation and renewal announcement on town bulletin board using BBS_Kodanuki strings
+0x001E42BC,Shop_Turnip_CalculateNextPriceTime,Shop,done,Calculates target timestamp for 9:00 AM morning and 12:00 PM afternoon turnip price shifts
+0x001E423C,Shop_Turnip_CheckPriceExpiry,Shop,done,Checks if current in-game time has crossed turnip price period boundary and triggers price re-evaluation
+0x001E4370,Shop_Catalog_CopyPlayerRecord,Shop,done,Copies 640-byte (0x280) catalog record including 386-byte unlocked item bitmask and recent orders
+0x001E4454,Shop_Catalog_CompactPlayerRecords,Shop,done,Scans and compacts active player catalog records across up to 80 storage slots in save file
+0x001E4718,Shop_InitDailyStock,Shop,done,Initializes daily floor display items and marks purchased items with sold out sign 0x2083
+0x001E4CF4,Shop_BuyDisplayItem,Shop,done,Processes floor item purchase decrements daily stock count and places 0x2083 or 0x2086 sold out marker
+0x0056C548,RecycleShop_InitDailyPremiumItem,Shop,done,Selects daily premium double-price item for Re-Tail and binds STR_Recycle_High to exterior chalkboard
+0x0056C634,RecycleShop_InitFleaMarketStalls,Shop,done,Initializes the 8 interactive flea market selling tables and prices inside Re-Tail
+0x005831A8,Audio_Bgm_StageOpusMgr_Init,Audio,done,Initializes StageOpusMgr singleton binds audio dispatch channels and sets initial volume state
+0x005832F8,Audio_Bgm_SwitchStageBgm,Audio,done,Crossfades and switches active stage BGM stream based on target location and stage ID
+0x0058392C,Audio_Bgm_ResolveStageId,Audio,done,"Maps game location flags to specific StageOpus BGM classes (Town, Tour, Island, Office, Club LOL)"
+0x00588BEC,Audio_Bgm_CalculateCrossfadeFrames,Audio,done,Computes minute 59 countdown frames for smooth crossfade transition into top-of-hour theme
+0x00589F40,Audio_Bgm_SetTrackVolumeAndFade,Audio,done,Sets target volume and fade rate on active BGM voice channel
+0x00246938,SoundObjRiver_Init,Audio,done,Initializes river positional sound emitter and allocates audio stream
+0x002469C8,SoundObjRiver_UpdatePositionAndPanning,Audio,done,Culls river audio beyond 300 units and tracks nearest orthogonal point on river spline for 3D panning
+0x00246B94,SoundObjRiver_StopAndRelease,Audio,done,Halts river audio stream and releases voice handle
+0x0020AFE0,SoundObjFall_Init,Audio,done,Initializes waterfall sound emitter with SFX ID 0x01000786
+0x0020B0FC,SoundObjFall_Update,Audio,done,Updates 3D positional panning and distance attenuation for waterfall roar 0x01000786
+0x001D9CC4,SoundObjNpc_Init,Audio,done,Binds NPC voice emitter to actor transform and initializes phonetic playback state
+0x001D9E6C,SoundObjNpc_UpdateVoiceSynthesis,Audio,done,Synthesizes Animalese speech modulating sound effect 0x01000565 across 13 chromatic pitch semitones
+0x006E3724,Player_Init,Player,done,Initializes AcPlayer actor instance transform model data and locomotion state machine
+0x0064BC6C,Player_UpdatePreviousCoords,Player,done,Caches previous frame 3D coordinates and facing rotation for interpolation and movement delta calculations
+0x006540B8,Player_UpdateStateMachine,Player,done,Evaluates locomotion state machine transitioning between walk run net sneak swim and dive states
+0x0068C1FC,Player_ApplyVelocityAndRotation,Player,done,Rotates velocity vector by player facing angle and applies 3D displacement to position
+0x0064BE70,Player_ResolveToolActionTarget,Player,done,Tests equipped tool target flags against interaction candidate resolving shovel dig fish water or bug net catch action
+0x00690800,Player_ToolFunctor_ExecuteAction,Player,done,Dispatches resolved tool action animation and sound effect trigger
+0x0064F26C,Player_BuildWorldMatrix,Player,done,Computes player world transform matrix and enqueues matrix to the active scene draw list
+0x00229D10,Weather_BsWeatherRain_UpdateParticles,Weather,done,"Calculates active rain particle count (32 for light, 128 for storm) with 30s linear crossfade"
+0x0022AFA0,Weather_BsWeatherSnow_UpdateParticles,Weather,done,"Calculates active snow particle count (100 for light, 400 for blizzard) with 30s linear crossfade"
+0x001FE9F0,Weather_BsThunderMgr_Init,Weather,done,"Initializes BsThunderMgr actor (size 0x64, vtable 0x008EC120)"
+0x001FE740,Weather_BsThunderMgr_GenerateMinuteStrikes,Weather,partial,Clears 60-byte per-minute strike buffer and caches time on weather-type branch; strike pattern generation source not yet located (audited 2026-09-07)
+0x001FE8DC,Weather_BsThunderMgr_TickLightning,Weather,done,"Evaluates current second against bitmap, flashes screen, and plays indoor/outdoor thunder SE"
+0x0062F4F4,Weather_CheckMeteorShowerActiveHours,Weather,done,Checks if current weather is clear and time is between 19:00 and 04:00 for shooting stars
+0x002C9E74,Weather_BsShootingStarMgr_ctor,Weather,done,"Constructs BsShootingStarMgr actor (size 0x3A4, vtable 0x008F1410)"
+0x002C9964,Weather_BsShootingStarMgr_Init,Weather,done,Initializes 4 star streak slots and positional audio emitters
+0x002C9AAC,Weather_BsShootingStarMgr_Update,Weather,done,"Updates active star streaks, audio chime 0x01000570, and lifetime timers"
+0x002C965C,Weather_BsShootingStarMgr_UpdateStarMatrix,Weather,done,Updates directional transform matrix for shooting star particle emitters
+0x002C9850,Weather_BsShootingStarMgr_TryWish,Weather,done,"Checks visible star arc during player wish, emits sparkles, and plays 0x01000571"
+0x00680E00,Player_PerformStarWish,Player,done,Triggers star wish attempt when player presses A without tools looking at sky
+0x001D3594,Actor_RegisterAllActors,Core,done,"Central actor engine registration initializing 669 actors, meta array 0x00952FB0, factory array 0x00954DA4"
+0x0051FD40,Actor_GetActorMetaByIndex,Core,done,Fetches 12-byte metadata entry for given actor index (bounds-checked against 669)
+0x0051FD74,Actor_InvokeFactoryByIndex,Core,done,Invokes 8-byte entry factory/constructor method from 0x00954DA4 for given actor index
+0x0011253C,Save_InitVillagersBlock,Save,done,"Initializes the 142,284-byte villager save region (10 resident slots + newcomer moving queue)"
+0x00308D08,Save_InitSingleVillagerRecord,Save,done,"Initializes an individual 9,496-byte villager save record (furniture, letters, 4 player relation records)"
+0x006F3F78,Villager_MoveIn_AssignPlayerSlot,Villager,partial,Finds first unoccupied town resident slot (0..9) and migrates newcomer data from queue (field-level semantics of migrated bytes unconfirmed, see functions/ audit note)
+0x007570D0,Villager_CheckIsBestFriend,Villager,done,"Checks if relationship state bits [2:0] equal 3 (Best Friend tier, picture reward eligible)"
+0x00757108,Villager_CheckSpokenToday,Villager,done,Checks bit 5 of relationship state byte to enforce once-per-day friendship conversation reward
+0x0075711C,Villager_CheckSlotEmpty,Villager,done,Checks if relationship state bits [2:0] equal 0 (unassigned / empty resident slot)
+0x00767150,Villager_SetGiftExchangeStatus,Villager,done,Sets bits [4:3] of relationship state byte during item/present trades and records item ID
+0x0064B410,Npc_AcNpcNml_ctor,Npc,done,"Constructs AcNpcNml animal villager actor, binds vtable 0x008F7304 and initializes animation components"
+0x0057A4F0,Npc_AcNpc_ctor,Npc,done,"Constructs AcNpc base actor, initializes AI state machine and audio receivers"
+0x005781D0,Npc_AcNpc_WanderSearchCandCB_Execute,Npc,done,Chebyshev metric candidate tile distance validator for villager wandering pathfinding
+0x006A0D60,Npc_BsNpcMgr_ctor,Npc,done,"Constructs central BsNpcMgr manager (max 10 villagers, up to 14 on Main Street, 4x4 acre boundary clamping)"
+0x002EBD84,Save_InitPublicWorksBlock,Save,done,"Initializes 18,508-byte PWP save region (4 PWPSaveBlock instances)"
+0x0024DBC4,PWP_InitSaveBlock,PWP,done,"Initializes 6 PWP construction slots, zeroes built count, and sets max project limit (0x1E = 30)"
+0x002D4F24,PWP_InitProjectSlot,PWP,done,Initializes single 770-byte project slot with 10x10 collision grid and 8x8 placement grid
+0x0024DD34,PWP_UnlockProject,PWP,done,Adds newly suggested project ID to player 40-byte unlocked project buffer if not duplicate
+0x0024DF60,PWP_ValidateAndPlaceProject,PWP,done,"Marks PWP active, stores 0x2E placement metadata, registers world collision, and updates state"
+0x0024E0D8,PWP_CheckDonationComplete,PWP,done,Evaluates Lloid gyroid Bell donations against project total cost and triggers completion
+0x00576484,AcNpcSpSecretaryCeremony_ctor,Npc,done,Constructs Isabelle PWP celebration ceremony actor with Mayor and 3 villager attendee slots
+0x002AD780,Item_BsInsectFieldMgr_ctor,Item,done,Constructs BsInsectFieldMgr with 12 normal slots (0x144 each) and 2 special event slots (wasps/ants)
+0x002ADCC8,Item_BsInsectFieldMgr_Update,Item,flagged,"AUDIT 2026-09-07: address is mid-body of Core_BsLightPointFix_Vtbl09 (entry 0x002adc10), not a function start. Description was fabricated. Likely real function: 0x002acb7c Insect_BsInsectFieldMgr_UpdateBugLoop -- needs confirmation before reuse."
+0x0025597C,Item_BsFishFieldMgr_ctor,Item,done,Constructs BsFishFieldMgr with 8 active swimming fish slots (0x18 each) and 15 sub-manager slots
+0x00255500,Item_BsFishFieldMgr_Update,Item,done,"Ticks active swimming fish shadow slots in river and ocean, updating spatial lifetime ticks"
+0x0076C72C,Museum_ValidateSpecimenIndex,Museum,done,"Validates specimen category (0..5) and category-relative index bounds (fossil:67, fish:72, diving:30, insect:72, art_p:25, art_s:8)"
+0x0076C680,Museum_GetSpecimenDonationStatus,Museum,done,"Returns donation flag byte (0=uncollected, 1..4=donated by player 0..3, 5=special/town donation)"
+0x0076B820,Museum_IsSpecimenDonated,Museum,done,Returns boolean indicating if specimen has been donated (donation flag != 0)
+0x0076BD80,Museum_GetSpecimenDonationDate,Museum,done,"Returns packed 4-byte donation date (uint16_t year, uint8_t month, uint8_t day) for specimen"
+0x0076B970,Museum_GetSpecimenDonatorName,Museum,done,"Resolves donator player UTF-16 name from player save +0x55A6 based on specimen donation flag"
+0x0076B9E8,Museum_HasAnyDonations,Museum,done,Checks if at least one specimen is donated across all 274 museum slots
+0x0076BB88,Museum_GetTotalDonationCount,Museum,done,"Iterates all 274 donation flag bytes and returns total number of donated specimens (0..274)"
+0x0076BD24,Museum_CheckFossilsComplete,Museum,done,Returns true if all 67 fossil specimens have been donated
+0x0076BE80,Museum_CheckInsectsComplete,Museum,done,Returns true if all 72 insect specimens have been donated
+0x0076B8D0,Museum_CheckAquariumComplete,Museum,done,"Returns true if aquarium is complete (all 72 fish + all 30 deep-sea diving creatures = 102)"
+0x0076C14C,Museum_CheckArtGalleryComplete,Museum,done,"Returns true if art gallery is complete (all 25 paintings + all 8 sculptures = 33)"
+0x0076C2E4,Museum_GetCompletedWingCount,Museum,done,"Returns total count of fully completed museum wings (0..4: Paleontology, Insectarium, Aquarium, Art Gallery)"
+0x0076C1EC,Museum_CalculateOverallCompletionPercentage,Museum,done,"Computes total museum completion percentage: (total_donations * 100) / 266"
+0x0076C22C,Museum_CalculateAquariumCompletionPercentage,Museum,done,"Computes aquarium completion percentage: (aquarium_donations * 100) / 102"
+0x0076C448,Museum_CalculateFossilCompletionPercentage,Museum,done,"Computes paleontology completion percentage: (fossil_donations * 100) / 67"
+0x0076C4C4,Museum_CalculateInsectCompletionPercentage,Museum,done,"Computes insectarium completion percentage: (insect_donations * 100) / 72"
+0x0076C5C8,Museum_CalculateArtCompletionPercentage,Museum,done,"Computes art gallery completion percentage: (art_donations * 100) / 33"
+0x0076C540,Museum_CheckDinosaurSkeletonComplete,Museum,done,"Checks if all fossil parts belonging to a multi-part dinosaur skeleton group ID (<= 30) are donated"
+0x0076BEDC,Museum_RoomHasAnyDonatedSpecimens,Museum,done,"Checks if specific museum exhibition room (IDs 0x4A..0x54) contains any donated specimens"
+0x0076C3BC,Museum_GetDonatedArtCount,Museum,done,"Counts donated art pieces across 25 paintings and 8 sculptures (0..33)"
+0x0076AC9C,Item_GetMuseumExhibitRoomId,Museum,done,"Maps specimen category and index to specific 3D exhibit room scene ID (0x4A..0x54)"
+0x00767B44,Item_GetFossilDinosaurGroupId,Museum,done,Reads multi-part dinosaur skeleton group ID from item metadata offset +0x12
+0x006BAD9C,Item_GetItemIdFromCategoryIndex,Museum,done,Converts museum category and relative index to global 16-bit ACNL item ID
+0x006BB3FC,Museum_InitDonationsSaveBlock,Museum,done,"Clears 1372-byte museum save block at +0x6AE38: sets 274 dates to 2012-01-01 and zeroes 274 flags"
+0x006BB544,Museum_ForceDonateTownSpecimen,Museum,done,Marks specimen as donated with special town flag (5) and sets current in-game date
+0x006BB660,Museum_DonateSpecimen,Museum,done,"Records donation by active player (1..4), writes packed date, checks wing completion, and updates catalog"
+0x002BF46C,Museum_InitCustomExhibitions,Museum,done,"Initializes 10484-byte 2F custom exhibition block at +0x502BC (4 rooms x 2520B furniture + 54B titles)"

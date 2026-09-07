@@ -1,0 +1,37 @@
+# Entire tools/ folder excluded by decision (2026-09-07) — contains copyrighted
+# game files (CIA/ROM/extracted ExeFS/RomFS) mixed with local analysis scripts
+# and third-party binaries. Not published for now; may be curated separately later.
+tools/
+
+*.cia
+*.3ds
+*.3dsx
+*.cxi
+*.cci
+*.romfs
+*.elf
+garden_plus.dat
+*.dat
+*.gpr
+*.rep/
+__pycache__/
+*.pyc
+
+# Build output
+build/
+out/
+scratch/
+
+# Local agent/editor state (not project deliverables)
+.claude/settings.local.json
+.claude/agent-memory/
+.obsidian/
+Thumbs.db
+.DS_Store
+
+# Internal working memory / AI-agent instructions — Russian, not for public repo.
+# Kept local only per explicit decision (2026-09-07): never publish, even if repo goes public later.
+STATE.md
+GEMINI.md
+CLAUDE.md
+notes/
