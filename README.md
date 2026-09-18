@@ -67,6 +67,12 @@ cmake --build build
 
 ---
 
+## AI Agents
+
+This project is developed with the help of AI agents — Claude and Gemini.
+
+---
+
 ## Contributing / prior art
 
 If you're working on ACNL reverse engineering independently, this project would rather coordinate than duplicate effort — open an issue.

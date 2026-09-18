@@ -3,11 +3,13 @@
 #include <array>
 #include "TerrainTile.h"
 #include "Item.h"
+#include "Mail.h"
+#include "BankABD.h"
 
 namespace acnl::save {
 
-// Total garden_plus.dat size
-inline constexpr size_t SAVE_GARDEN_PLUS_SIZE = 563968; // 0x89AB7 + 1 = 0x89AB8? (approx 550KB)
+// Total garden_plus.dat size (Confirmed exact: 563,968 bytes)
+inline constexpr size_t SAVE_GARDEN_PLUS_SIZE = 0x89B00; // 563,968 bytes
 
 // ============================================================================
 // Major Save Sub-Object Offsets in garden_plus.dat
@@ -33,9 +35,17 @@ inline constexpr size_t OFFSET_TOWN_HALL_PLAZA  = 0x6E1F4; // Town Hall, Town Tr
 inline constexpr size_t OFFSET_CAMPSITE_RV_PARK = 0x70E60; // Harvey's RV Campground (Welcome amiibo)
 inline constexpr size_t OFFSET_AMIIBO_WISP      = 0x717EC; // Wisp magic lamp state
 
-inline constexpr size_t OFFSET_PLAYERS          = 0x73958; // 4 Player slots
-inline constexpr size_t PLAYER_SLOT_SIZE        = 0x05858; // Approx 22,616 bytes per player
+inline constexpr size_t OFFSET_PLAYERS          = 0x73958; // 4 Player slots (start of player 0)
+inline constexpr size_t PLAYER_SLOT_SIZE        = 0x01B88; // Mail region: 10 pockets + 1 buffer (7,048 bytes)
 inline constexpr size_t PLAYER_COUNT            = 4;
+
+// Player internal sub-object relative offsets (from player base):
+inline constexpr size_t PLAYER_REL_MAIL_REGION  = 0x00000; // 0x1B88 bytes (MailData[10] + working + tail)
+inline constexpr size_t PLAYER_REL_ABD_ACCOUNT  = 0x06B8C; // 8 bytes (AbdAccount)
+
+// Post Office persistent letter storage (80 letters = 51,200 bytes):
+inline constexpr size_t OFFSET_POSTOFFICE_STORAGE = 0x7BDF8; // 80 letters (0xC800 bytes)
+
 
 // ============================================================================
 // Villager Data Structure (0x2518 = 9,496 bytes)
