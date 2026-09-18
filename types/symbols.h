@@ -838,4 +838,31 @@ namespace acnl::symbols {
     // Fetches APT service handle for App module
     inline constexpr uintptr_t Core_GetAppServicePointer = 0x007b0ba0;
 
+    // Calculates monthly interest on ABD savings (0.5%, max 99,999 Bells), deposits interest to +0x6B8C, sends Mail_SP_Postoffice letter, and awards 8 tiers of savings milestone items (100k to 100M Bells).
+    inline constexpr uintptr_t PostOffice_UpdateMonthlyInterestAndSavingsRewards = 0x0062F7D0;
+
+    // Decrypts obfuscated ABD savings balance from 8-byte player struct (+0x6B8C). Validates checksum with 0xBA, applies ROL32(28 - shift), and subtracts (key + 0x8F187432).
+    inline constexpr uintptr_t Player_Abd_GetBalance = 0x00303700;
+
+    // Encrypts ABD bank balance into 8-byte player struct (+0x6B8C). Generates random 16-bit key, random shift (0..25), applies ROL32(shift + 4), and writes checksum with constant 0xBA.
+    inline constexpr uintptr_t Player_Abd_SetBalance = 0x003035C4;
+
+    // Adds deposit amount to ABD savings balance with overflow check, clamping to max limit (999,999,999 Bells).
+    inline constexpr uintptr_t Player_Abd_DepositClamped = 0x00612CD4;
+
+    // Calls Player_Abd_DepositClamped on player account (+0x6B8C) with hardcoded max limit of 999,999,999 Bells.
+    inline constexpr uintptr_t Player_Abd_AddInterest = 0x00305AD8;
+
+    // Creates special system letter from template (e.g. Mail_SP_Postoffice) with recipient, stationery, item attachment, and queue flags.
+    inline constexpr uintptr_t Mail_CreateSpecialLetter = 0x005CB34C;
+
+    // Evaluates player stumbling/tripping during running (TUMB debug tag). Checks for King Tut Mask (0x28B8) or Bad Physical Luck (DAT_00952f68 == 9). T = 450 + RNG(0..299) frames (15.0 to 25.0s). When T==1, calls Player_ExecuteTumbleTransition.
+    inline constexpr uintptr_t Player_CheckAndTriggerTumble = 0x00653EB0;
+
+    // Validates terrain height and collision obstacles ahead at 24.0f distance before executing trip. If unobstructed, triggers locomotion action 0x9F (flat fall tumble).
+    inline constexpr uintptr_t Player_ExecuteTumbleTransition = 0x00663F08;
+
+    // Maps birth month and day to one of 12 astronomical Zodiac signs (0: Capricorn .. 11: Sagittarius) using 12 cutoff date pairs at DAT_0088f142.
+    inline constexpr uintptr_t Time_GetZodiacSignFromDate = 0x0056AEE8;
+
 } // namespace acnl::symbols
