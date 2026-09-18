@@ -177,6 +177,9 @@ Address,Name,Subsystem,Status,Description
 0x0058392C,Audio_Bgm_ResolveStageId,Audio,done,"Maps game location flags to specific StageOpus BGM classes (Town, Tour, Island, Office, Club LOL)"
 0x00588BEC,Audio_Bgm_CalculateCrossfadeFrames,Audio,done,Computes minute 59 countdown frames for smooth crossfade transition into top-of-hour theme
 0x00589F40,Audio_Bgm_SetTrackVolumeAndFade,Audio,done,Sets target volume and fade rate on active BGM voice channel
+0x005956c4,Town_ProcessShovelHitOnStone,Town,done,"Processes shovel hit on rock tile: checks rock type via Town_EvaluateRockTypeAndLuck, enqueues drop event into 4-slot queue."
+0x00596d80,Town_EvaluateRockTypeAndLuck,Town,done,"Evaluates stone visual types (0x71..0x7A), cancels coin drop if Bad Money Luck active (DAT_00952f68 == 1), returns rock action type (2 normal, 3 money rock, 4 breakable ore rock)."
+0x0059ea7c,Town_SpawnRockHitReward,Town,done,"Spawns rewards around struck rock for up to 8 strikes (do..while i<8): routes to 8 adjacent open tiles (0x0085E0C8/0x0085E0E8), drops progressive Bells or gems if Silver Shovel / Ore Luck active."
 0x005B07B8,Msg_MsbtWrapper_Load,Script,done,Allocates wrapper descriptor and binds MSBT binary buffer pointer
 0x005B0854,Msg_MsbfWrapper_Load,Script,done,Allocates wrapper descriptor and binds MSBF binary buffer pointer
 0x005B0870,Msg_MsbfWrapper_Destroy,Script,done,Releases MSBF wrapper descriptor and clears buffer references
@@ -217,6 +220,7 @@ Address,Name,Subsystem,Status,Description
 0x0064F26C,Player_BuildWorldMatrix,Player,done,Computes player world transform matrix and enqueues matrix to the active scene draw list
 0x006540B8,Player_UpdateStateMachine,Player,done,Evaluates locomotion state machine transitioning between walk run net sneak swim and dive states
 0x00680E00,Player_PerformStarWish,Player,done,Triggers star wish attempt when player presses A without tools looking at sky
+0x006828bc,Player_HitStoneWithShovel,Player,done,"Dispatches shovel strike on stone: checks distance <= 32.0f, invokes Town_ProcessShovelHitOnStone, triggers bounce-back recoil."
 0x0068b9bc,Player_AcPlayer_Draw,Player,done,"Renders player character model, applies texture swaps for facial expressions, and projects dynamic circular shadow with radius scaled by 13.0f."
 0x0068C0EC,Player_UpdateMovementPhysics,Player,done,Snaps player vertical elevation to town heightmap resolves collision against obstacles and updates physics
 0x0068C1FC,Player_ApplyVelocityAndRotation,Player,done,Rotates velocity vector by player facing angle and applies 3D displacement to position
@@ -247,6 +251,7 @@ Address,Name,Subsystem,Status,Description
 0x007570D0,Villager_CheckIsBestFriend,Villager,done,"Checks if relationship state bits [2:0] equal 3 (Best Friend tier, picture reward eligible)"
 0x00757108,Villager_CheckSpokenToday,Villager,done,Checks bit 5 of relationship state byte to enforce once-per-day friendship conversation reward
 0x0075711C,Villager_CheckSlotEmpty,Villager,done,Checks if relationship state bits [2:0] equal 0 (unassigned / empty resident slot)
+0x00766a5c,Item_ApplySilverShovelRockModifier,Item,done,Checks equipped tool for Silver Shovel (0x335B): sets bit flag param_2[1] |= 1 on rock object to enable multi-gem mineral drop.
 0x00767150,Villager_SetGiftExchangeStatus,Villager,done,Sets bits [4:3] of relationship state byte during item/present trades and records item ID
 0x00767B44,Item_GetFossilDinosaurGroupId,Museum,done,Reads multi-part dinosaur skeleton group ID from item metadata offset +0x12
 0x0076AC9C,Item_GetMuseumExhibitRoomId,Museum,done,Maps specimen category and index to specific 3D exhibit room scene ID (0x4A..0x54)

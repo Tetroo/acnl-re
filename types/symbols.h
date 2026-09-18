@@ -538,6 +538,15 @@ namespace acnl::symbols {
     // Sets target volume and fade rate on active BGM voice channel
     inline constexpr uintptr_t Audio_Bgm_SetTrackVolumeAndFade = 0x00589F40;
 
+    // Processes shovel hit on rock tile: checks rock type via Town_EvaluateRockTypeAndLuck, enqueues drop event into 4-slot queue.
+    inline constexpr uintptr_t Town_ProcessShovelHitOnStone = 0x005956c4;
+
+    // Evaluates stone visual types (0x71..0x7A), cancels coin drop if Bad Money Luck active (DAT_00952f68 == 1), returns rock action type (2 normal, 3 money rock, 4 breakable ore rock).
+    inline constexpr uintptr_t Town_EvaluateRockTypeAndLuck = 0x00596d80;
+
+    // Spawns rewards around struck rock for up to 8 strikes (do..while i<8): routes to 8 adjacent open tiles (0x0085E0C8/0x0085E0E8), drops progressive Bells or gems if Silver Shovel / Ore Luck active.
+    inline constexpr uintptr_t Town_SpawnRockHitReward = 0x0059ea7c;
+
     // Allocates wrapper descriptor and binds MSBT binary buffer pointer
     inline constexpr uintptr_t Msg_MsbtWrapper_Load = 0x005B07B8;
 
@@ -658,6 +667,9 @@ namespace acnl::symbols {
     // Triggers star wish attempt when player presses A without tools looking at sky
     inline constexpr uintptr_t Player_PerformStarWish = 0x00680E00;
 
+    // Dispatches shovel strike on stone: checks distance <= 32.0f, invokes Town_ProcessShovelHitOnStone, triggers bounce-back recoil.
+    inline constexpr uintptr_t Player_HitStoneWithShovel = 0x006828bc;
+
     // Renders player character model, applies texture swaps for facial expressions, and projects dynamic circular shadow with radius scaled by 13.0f.
     inline constexpr uintptr_t Player_AcPlayer_Draw = 0x0068b9bc;
 
@@ -747,6 +759,9 @@ namespace acnl::symbols {
 
     // Checks if relationship state bits [2:0] equal 0 (unassigned / empty resident slot)
     inline constexpr uintptr_t Villager_CheckSlotEmpty = 0x0075711C;
+
+    // Checks equipped tool for Silver Shovel (0x335B): sets bit flag param_2[1] |= 1 on rock object to enable multi-gem mineral drop.
+    inline constexpr uintptr_t Item_ApplySilverShovelRockModifier = 0x00766a5c;
 
     // Sets bits [4:3] of relationship state byte during item/present trades and records item ID
     inline constexpr uintptr_t Villager_SetGiftExchangeStatus = 0x00767150;
