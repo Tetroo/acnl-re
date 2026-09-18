@@ -211,4 +211,19 @@ namespace acnl::symbols {
     // Creates special system letter from template (e.g. Mail_SP_Postoffice) with recipient, stationery, item attachment, and queue flags.
     inline constexpr uintptr_t Mail_CreateSpecialLetter = 0x005CB34C;
 
+    // Evaluates player stumbling/tripping during running (TUMB debug tag). Checks for King Tut Mask (0x28B8) or Bad Physical Luck (DAT_00952f68 == 9). T = 450 + RNG(0..299) frames (15.0 to 25.0s). When T==1, calls Player_ExecuteTumbleTransition.
+    inline constexpr uintptr_t Player_CheckAndTriggerTumble = 0x00653EB0;
+
+    // Validates terrain height and collision obstacles ahead at 24.0f distance before executing trip. If unobstructed, triggers locomotion action 0x9F (flat fall tumble).
+    inline constexpr uintptr_t Player_ExecuteTumbleTransition = 0x00663F08;
+
+    // Computes daily luck category index (0..9) from player birthday month/day (Zodiac sign 0..11 via 0x0056AEE8), calendar date, and day-of-week indexing 70x12 matrix UNK_00880a64.
+    inline constexpr uintptr_t Player_CalculateDailyLuckType = 0x0023D750;
+
+    // Evaluates player daily luck and checks lucky item (tag 0x98) in 16 pocket slots. Decrements odd/bad luck by 1 (e.g. 9->8) to negate negative effects. Evaluates Feng Shui (source 3).
+    inline constexpr uintptr_t Player_EvaluateDailyLuckAndModifiers = 0x0023D5F0;
+
+    // Maps birth month and day to one of 12 astronomical Zodiac signs (0: Capricorn .. 11: Sagittarius) using 12 cutoff date pairs at DAT_0088f142.
+    inline constexpr uintptr_t Time_GetZodiacSignFromDate = 0x0056AEE8;
+
 } // namespace acnl::symbols

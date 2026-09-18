@@ -49,16 +49,22 @@ The active movement state is stored as an 8-bit enum at offset `+0x1A9`:
 
 ---
 
-## 3. King Tut Mask & Bad Luck Tripping Mechanics
+## 3. King Tut Mask & Bad Luck Tripping Mechanics (TUMB)
 
-> [!WARNING] ⚠️ External game knowledge (audit 2026-09-07)
-> This whole section, marked "Fully Reverse-Engineered" in the original version with formulas `32/256` and `16/256`, referenced a function `ShouldPlayerTrip` that **does not exist**, either in Ghidra (`get_function_by_address`/`search_functions` find nothing) or in `symbols.csv`. This is a known ACNL gameplay mechanic (the King Tut mask + bad luck cause stumbling while running) retold from memory/wiki, not derived from code. The probability formulas (12.5%, 6.25%) are pure fabrication, unconfirmed by anything.
->
-> Checked during the audit: `Player_UpdateStateMachine` (`0x006540B8`) — the function that actually drives transitions of state `+0x1A9` — was re-decompiled. It contains **no** RNG call, no mask-equip check, no percentage calculations. A tripping state (if it's even encoded as a separate byte value) does not appear explicitly in this function.
->
-> What's actually confirmed in `Player_UpdateStateMachine`: the state byte `param_1 + 0x1A9` is compared against `'\0'` (Idle), `'G'` (`0x47`, Run) and `'\x18'` (`0x18`, Walk) — this matches the table below for these three states. The remaining table states (SneakNet, Tripping, Pitfall, CliffJump, Swimming, Diving) and their numeric codes are **not found** in this function — HYPOTHESIS.
->
-> **Next step, if someone wants to investigate this further:** look for the function that reads the daily "physical luck" (Katrina/fortune) and calls RNG during running — a possible candidate is somewhere in the chain `Player_UpdateMovementPhysics` → `Player_UpdateStateMachine` → undeciphered `FUN_xxx`, but no specific address has been established.
+`[TOOL]` Reverse-engineered from `Player_CheckAndTriggerTumble` (`0x00653EB0`) and `Player_ExecuteTumbleTransition` (`0x00663F08`).
+Internal debug identifier: `"TUMB To<%.2f> C<%d>"`.
+
+### 3.1 Trigger Conditions
+Tripping while running (`FUN_006e3c74(*(int16_t*)(param_1 + 0x224)) != 0`) is activated under either of two conditions:
+1. **Equipped King Tut Mask (`0x28B8`):** Verified by `FUN_002fcbe8(headwear, 0x28B8)`. Forces tripping regardless of daily luck.
+2. **Bad Physical Luck (`DAT_00952f68 == 0x09`):** Calculated by `Player_CalculateDailyLuckType` (`0x0023D750`). Wearing a Lucky Item equipped in inventory/headwear decrements this to `0x08`, neutralizing the stumbling effect (`Player_EvaluateDailyLuckAndModifiers` `0x0023D5F0`).
+
+### 3.2 Countdown Frame Timer Math
+Instead of a fixed per-step probability percentage, the game uses a continuous running frame timer at `param_1 + 0x1550`:
+- **Cooldown Interval:** When the timer reaches `0`, it is reset to:
+  $$T = 450 + \text{RNG}(0 \dots 299) \text{ frames}$$
+- **Time Window:** At 30.0 fps, this guarantees between **15.0 and 24.97 seconds** of continuous running before each stumble attempt.
+- **Trigger Execution:** When the timer decrements to `1`, `Player_ExecuteTumbleTransition` (`0x00663F08`) validates the path ahead with collision raycasts at $24.0\text{f}$ distance (`0x41C00000`). If unobstructed, action `0x9F` (sliding tumble face-down) is triggered via `FUN_0064c100(param_1, 0x9f, 0)`. If obstructed, the timer is held at `1` until a clear surface is reached.
 
 ---
 
@@ -89,3 +95,5 @@ The player resolves tool action targets through a virtual functor (`0x00909CA0` 
 | `0x0064BE70` | `Player_ResolveToolActionTarget` | Evaluates target flags for equipped tool (Shovel, Rod, Net) |
 | `0x00690800` | `Player_ToolFunctor_ExecuteAction` | Dispatches resolved tool action animation and sound effect |
 | `0x0064F26C` | `Player_BuildWorldMatrix` | Builds player transformation matrix and enqueues to draw buffer |
+| `0x00653EB0` | `Player_CheckAndTriggerTumble` | Evaluates King Tut mask / bad luck and runs tumble cooldown countdown |
+| `0x00663F08` | `Player_ExecuteTumbleTransition` | Validates forward terrain collision and triggers 0x9F tumble slide action |
