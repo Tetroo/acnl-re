@@ -6,6 +6,8 @@
 #include "gfx/Camera.hpp"
 #include "gfx/WorldCurvature.hpp"
 #include "gfx/AcreMeshGenerator.hpp"
+#include "bank/AbdManager.hpp"
+#include "mail/MailManager.hpp"
 
 int main(int argc, char* argv[]) {
     std::cout << "========================================================\n";
@@ -75,8 +77,38 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "  - Generated Terrain Submeshes: " << townMesh.size() << "\n";
     std::cout << "  - Total Mesh Vertices:        " << totalVertices << "\n";
-    std::cout << "  - Total Mesh Triangles:       " << (totalIndices / 3) << "\n";
+    std::cout << "  - Total Mesh Triangles:       " << (totalIndices / 3) << "\n\n";
+
+    // 4. Mail & ABD Banking Subsystem Verification
+    std::cout << "[*] Testing ABD Banking & Post Office Mail Subsystem...\n";
+    acnl::bank::AbdAccount account{};
+    uint8_t flag1 = 0;
+    uint8_t flag2 = 0;
+    acnl::bank::AbdManager abdMgr(account, flag1, flag2);
+
+    abdMgr.setBalance(1'200'000); // 1.2M Bells deposit
+    std::cout << "  - Decrypted ABD Balance:       " << abdMgr.getBalance() << " bells\n";
+
+    auto payout = abdMgr.updateMonthlyInterest(1); // 1 month interest
+    std::cout << "  - Accrued Monthly Interest:    " << payout.accruedInterest << " bells (0.5% rate)\n";
+    std::cout << "  - New Account Balance:         " << payout.newBalance << " bells\n";
+    std::cout << "  - Unlocked Savings Milestones: " << payout.unlockedRewardItemIds.size() << " items\n";
+
+    acnl::mail::PlayerMailRegion playerMail{};
+    acnl::mail::PostOfficeMailStorage postStorage{};
+    acnl::mail::MailManager mailMgr(playerMail, postStorage);
+
+    auto noticeLetter = acnl::mail::MailManager::createPostOfficeNotice(
+        u"Mayor",
+        u"Your bank interest has been deposited to your ABD account!",
+        payout.unlockedRewardItemIds.empty() ? acnl::mail::ITEM_NONE_PRESENT : payout.unlockedRewardItemIds.back()
+    );
+    bool delivered = mailMgr.deliverLetterToPockets(noticeLetter);
+    std::cout << "  - Post Office Letter Delivery: " << (delivered ? "Delivered to Pocket Slot #0" : "Pockets Full") << "\n";
+    uint16_t present = mailMgr.takePresent(0);
+    std::cout << "  - Unwrapped Present Item ID:   0x" << std::hex << present << std::dec << "\n";
 
     std::cout << "\n[+] All core engine subsystems initialized and verified successfully!\n";
     return 0;
 }
+
