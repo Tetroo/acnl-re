@@ -17,10 +17,14 @@ garden_plus.dat
 __pycache__/
 *.pyc
 
-# Build output
+# Build output & native port drafts
 build/
 out/
 scratch/
+src/
+native/
+port/
+
 
 # Local agent/editor state (not project deliverables)
 .claude/settings.local.json
