@@ -13,6 +13,9 @@ namespace acnl::symbols {
     // Cleans up and destructs weather heap objects
     inline constexpr uintptr_t Weather_CleanupWeatherHeap = 0x001009e4;
 
+    // Beach seashell & flora spawner: picks 1 of 10 seashell species (0x208C..0x2095) via cumulative tables based on player item luck (Table 0 Bad, Table 1 Normal, Table 2 Good).
+    inline constexpr uintptr_t Town_ProcessFloraTileGrid_SpawnFloraCallback = 0x0010446c;
+
     // Initializes the 142,284-byte villager save region (10 resident slots + newcomer moving queue)
     inline constexpr uintptr_t Save_InitVillagersBlock = 0x0011253C;
 
@@ -232,7 +235,7 @@ namespace acnl::symbols {
     // Deleting destructor for AcObjectBase. Invokes Actor_Actor_Dtor and deallocates instance memory via operator delete.
     inline constexpr uintptr_t Actor_AcObjectBase_Dtor = 0x001f50c0;
 
-    // Clears 60-byte per-minute strike buffer and caches time on weather-type branch; strike pattern generation source not yet located (audited 2026-09-07)
+    // Generates 60-byte minute strike bitmap at +0x13 in thunderstorm; seeds Xorshift128 PRNG with date and TownID (+0x621b8) and spaces strikes by 3..9 min intervals.
     inline constexpr uintptr_t Weather_BsThunderMgr_GenerateMinuteStrikes = 0x001FE740;
 
     // Evaluates current second against bitmap, flashes screen, and plays indoor/outdoor thunder SE
@@ -262,7 +265,7 @@ namespace acnl::symbols {
     // Calculates active snow particle count (100 for light, 400 for blizzard) with 30s linear crossfade
     inline constexpr uintptr_t Weather_BsWeatherSnow_UpdateParticles = 0x0022AFA0;
 
-    // Address does not resolve in Ghidra (re-audit 2026-09-07) - was: Timer/tick-based check function. Uses SVC 0x28 (GetSystemTick) and divides by 0x1a/0x5a constants. Calls FUN00300fdc onl
+    // Performs periodic system tick sanity check via SVC 0x28 (svcGetSystemTick); verifies elapsed ticks against 0x5a threshold and updates save buffer on state change.
     inline constexpr uintptr_t Time_PeriodicTimerCheck = 0x0022eba4;
 
     // Evaluates player daily luck and checks lucky item (tag 0x98) in 16 pocket slots. Decrements odd/bad luck by 1 (e.g. 9->8) to negate negative effects. Evaluates Feng Shui (source 3).
@@ -334,14 +337,26 @@ namespace acnl::symbols {
     // Updates cherry blossom sakura particle simulation
     inline constexpr uintptr_t Weather_UpdateSakuraParticles = 0x002960d0;
 
+    // Ticks insect spawn countdown timer at +0x11fc; reloads from +0x11f8 and triggers insect spawn attempt.
+    inline constexpr uintptr_t Insect_BsInsectFieldMgr_TickSpawnTimer = 0x002ab3c0;
+
     // Checks rain and snow weather flags; automatically despawns flying ('A') and ground ('F'/'G') insects.
     inline constexpr uintptr_t Insect_BsInsectFieldMgr_CheckWeatherDespawn = 0x002abfe0;
+
+    // Synchronizes 12 insect slots (H..S) with active actors and despawns species mismatches.
+    inline constexpr uintptr_t Insect_BsInsectFieldMgr_SyncSlotsAndDespawnMismatch = 0x002ac170;
+
+    // Every 11 frames (+0x1205) calculates squared distance to all 4 players; triggers scare vtable[0xb0] if < scare_radius^2.
+    inline constexpr uintptr_t Insect_BsInsectFieldMgr_CheckPlayerProximityAndScare = 0x002ac5e0;
 
     // Main update tick for insect manager: manages 12 concurrent slots ('H'..'S') and updates active bug AI.
     inline constexpr uintptr_t Insect_BsInsectFieldMgr_UpdateBugLoop = 0x002acb7c;
 
     // Constructs BsInsectFieldMgr with 12 normal slots (0x144 each) and 2 special event slots (wasps/ants)
     inline constexpr uintptr_t Item_BsInsectFieldMgr_ctor = 0x002AD780;
+
+    // Virtual method slot 9 of BsLightPointFix (address was previously recorded incorrectly as mid-body 0x002adcc8 in 2026-09-07 audit).
+    inline constexpr uintptr_t Core_BsLightPointFix_Vtbl09 = 0x002adc10;
 
     // AUDIT 2026-09-07: address is mid-body of Core_BsLightPointFix_Vtbl09 (entry 0x002adc10), not a function start. Description was fabricated. Likely real function: 0x002acb7c Insect_BsInsectFieldMgr_UpdateBugLoop -- needs confirmation before reuse.
     inline constexpr uintptr_t Item_BsInsectFieldMgr_Update = 0x002ADCC8;
@@ -442,11 +457,20 @@ namespace acnl::symbols {
     // Called from FUN005c9a24 (villager slot reader) as the per-slot gate that decides whether a villager slot is occupied/val
     inline constexpr uintptr_t Town_CheckVillagerSlotValidity = 0x00301ebc;
 
+    // Encrypts ABD bank balance into 8-byte player struct (+0x6B8C). Generates random 16-bit key, random shift (0..25), applies ROL32(shift + 4), and writes checksum with constant 0xBA.
+    inline constexpr uintptr_t Player_Abd_SetBalance = 0x003035C4;
+
+    // Decrypts obfuscated ABD savings balance from 8-byte player struct (+0x6B8C). Validates checksum with 0xBA, applies ROL32(28 - shift), and subtracts (key + 0x8F187432).
+    inline constexpr uintptr_t Player_Abd_GetBalance = 0x00303700;
+
     // Initialises a different-typed object at offset +0x1b80 within the player region. Called once per player by FUN006f4234 a
     inline constexpr uintptr_t Player_ConstructPlayerTailObject = 0x00303d80;
 
     // Thunk redirecting to Save_AllocateAndConstructSaveBuffer (0x005c9dd4)
     inline constexpr uintptr_t Save_Thunk_AllocateAndConstructSaveBuffer = 0x00304f70;
+
+    // Calls Player_Abd_DepositClamped on player account (+0x6B8C) with hardcoded max limit of 999,999,999 Bells.
+    inline constexpr uintptr_t Player_Abd_AddInterest = 0x00305AD8;
 
     // Reads a single byte from the main game state object at a fixed offset. Used as a condition gate in FUN0062eee8 - if resu
     inline constexpr uintptr_t Core_ReadGameStateFlag = 0x0030601c;
@@ -484,6 +508,12 @@ namespace acnl::symbols {
     // Loads software keyboard localized text swkbd.msbt and style RI.mstl based on active language index
     inline constexpr uintptr_t Msg_LoadSwkbdMsbt = 0x00523378;
 
+    // Initializes 128-bit PRNG state from 32-bit seed using Knuth/Mersenne multiplier 0x6c078965.
+    inline constexpr uintptr_t Core_Prng_InitXorShift128 = 0x0055bb14;
+
+    // Standard 128-bit Xorshift PRNG generator with shift parameters (11, 8, 19).
+    inline constexpr uintptr_t Core_Prng_NextXorShift128 = 0x0055bbb0;
+
     // Periodically updates the global time singleton object at DAT0056a928 → 0x00AD46B0. This is the function that keeps the i
     inline constexpr uintptr_t Time_PeriodicTimeUpdater = 0x0056a74c;
 
@@ -495,6 +525,9 @@ namespace acnl::symbols {
 
     // Returns a period index (0-22) representing where the current date falls within the annual season calendar. Used by FUN00
     inline constexpr uintptr_t Time_GetSeasonPeriodIndex = 0x0056ac80;
+
+    // Maps birth month and day to one of 12 astronomical Zodiac signs (0: Capricorn .. 11: Sagittarius) using 12 cutoff date pairs at DAT_0088f142.
+    inline constexpr uintptr_t Time_GetZodiacSignFromDate = 0x0056AEE8;
 
     // This function is the direct source of the 2050 date limit.
     inline constexpr uintptr_t Time_NormalizeYearRange_2050Limit = 0x0056bbd4;
@@ -562,6 +595,9 @@ namespace acnl::symbols {
     // Converts a raw state index (from FUN002F755C) into a weather type integer used by the record index formula in FUN001E63D
     inline constexpr uintptr_t Weather_MapStateIndexToWeatherType = 0x005b2fe0;
 
+    // Isabelle sends town tree anniversary commemorative mail Mail_SP_Secretary with sapling clock item 0x3042 attached.
+    inline constexpr uintptr_t Town_SendIsabelleAnniversaryReward = 0x005c507c;
+
     // Increments a 64-bit counter (DAT005c96dc as {uint32 lo; uint32 hi;}) by 1, with special-case logic to skip the value 0 o
     inline constexpr uintptr_t Core_IncrementNonZero64BitCounter = 0x005c96a0;
 
@@ -582,6 +618,9 @@ namespace acnl::symbols {
 
     // The primary C++ object constructor for the gardenplus.dat buffer. Called from FUN005c9dd4 with param1 = buffer + 0x80. C
     inline constexpr uintptr_t Save_SaveObjectMasterConstructor = 0x005ca4f4;
+
+    // Creates special system letter from template (e.g. Mail_SP_Postoffice) with recipient, stationery, item attachment, and queue flags.
+    inline constexpr uintptr_t Mail_CreateSpecialLetter = 0x005CB34C;
 
     // Initialises the C++ object region immediately after the 167,936-byte raw data block in the save buffer. Called from FUN0
     inline constexpr uintptr_t Save_SaveBufferSubRegionConstructor = 0x005ccdc8;
@@ -622,6 +661,9 @@ namespace acnl::symbols {
     // SOLVED TOWN ACRES RUNTIME HANDLER. Initializes 7x6 TownAcres (0x53484) and 5x4 playable acres.
     inline constexpr uintptr_t Town_InitTownGridAndAcres = 0x00612820;
 
+    // Adds deposit amount to ABD savings balance with overflow check, clamping to max limit (999,999,999 Bells).
+    inline constexpr uintptr_t Player_Abd_DepositClamped = 0x00612CD4;
+
     // Returns a pointer to the global weather data source object. The object contains weather pattern records of size 0x8C (14
     inline constexpr uintptr_t Weather_GetWeatherPatternData = 0x0061494c;
 
@@ -649,6 +691,9 @@ namespace acnl::symbols {
     // Checks if current weather is clear and time is between 19:00 and 04:00 for shooting stars
     inline constexpr uintptr_t Weather_CheckMeteorShowerActiveHours = 0x0062F4F4;
 
+    // Calculates monthly interest on ABD savings (0.5%, max 99,999 Bells), deposits interest to +0x6B8C, sends Mail_SP_Postoffice letter, and awards 8 tiers of savings milestone items (100k to 100M Bells).
+    inline constexpr uintptr_t PostOffice_UpdateMonthlyInterestAndSavingsRewards = 0x0062F7D0;
+
     // Constructs AcNpcNml animal villager actor, binds vtable 0x008F7304 and initializes animation components
     inline constexpr uintptr_t Npc_AcNpcNml_ctor = 0x0064B410;
 
@@ -661,8 +706,14 @@ namespace acnl::symbols {
     // Computes player world transform matrix and enqueues matrix to the active scene draw list
     inline constexpr uintptr_t Player_BuildWorldMatrix = 0x0064F26C;
 
+    // Evaluates player stumbling/tripping during running (TUMB debug tag). Checks for King Tut Mask (0x28B8) or Bad Physical Luck (DAT_00952f68 == 9). T = 450 + RNG(0..299) frames (15.0 to 25.0s). When T==1, calls Player_ExecuteTumbleTransition.
+    inline constexpr uintptr_t Player_CheckAndTriggerTumble = 0x00653EB0;
+
     // Evaluates locomotion state machine transitioning between walk run net sneak swim and dive states
     inline constexpr uintptr_t Player_UpdateStateMachine = 0x006540B8;
+
+    // Validates terrain height and collision obstacles ahead at 24.0f distance before executing trip. If unobstructed, triggers locomotion action 0x9F (flat fall tumble).
+    inline constexpr uintptr_t Player_ExecuteTumbleTransition = 0x00663F08;
 
     // Triggers star wish attempt when player presses A without tools looking at sky
     inline constexpr uintptr_t Player_PerformStarWish = 0x00680E00;
@@ -733,8 +784,17 @@ namespace acnl::symbols {
     // [audit 2026-09-07: prior /garden.dat string-source claim did not match live decompile — see functions/0070D894_*.md]
     inline constexpr uintptr_t Town_UiStringBuilderForSaveFileLabels = 0x0070d894;
 
+    // Calculates player outstanding house mortgage by summing built room tiers across 6 rooms (0x302 byte save records), adding 158k for Welcome amiibo Secret Storeroom (+0x5727), subtracting 10k down payment and repayments.
+    inline constexpr uintptr_t Town_CalculatePlayerRemainingDebt = 0x00715550;
+
+    // Calculates house progression stage (0=tent, 1=initial 4x4, 2=6x6, 3=8x8, 4=2F added, 5..9=additional rooms count).
+    inline constexpr uintptr_t Town_GetHouseProgressionStage = 0x007155e8;
+
     // Calls FUN00300fdc (result unused) then immediately calls the non-returning FUN002faec0. This is an error/abort path, not
     inline constexpr uintptr_t Save_SaveBufferErrorAbort = 0x0071ee44;
+
+    // Checks if a house room is built and active (status byte at +0x1E != 1 and != 5).
+    inline constexpr uintptr_t Town_HouseIsRoomActive = 0x0071f3d4;
 
     // Reads a single byte from a struct array: field +0x36 of element param2. Used to check "level" values for state sub-objec
     inline constexpr uintptr_t Core_ReadStructArrayLevelField = 0x0071f3ec;
@@ -759,6 +819,12 @@ namespace acnl::symbols {
 
     // Checks if relationship state bits [2:0] equal 0 (unassigned / empty resident slot)
     inline constexpr uintptr_t Villager_CheckSlotEmpty = 0x0075711C;
+
+    // Extracts item/gift exchange tier (bits [4:3]) from player-villager relation byte +0x270.
+    inline constexpr uintptr_t Villager_GetGiftExchangeTier = 0x00757130;
+
+    // Compares player TownID (+0x621B8), gender (+0x621CC), and UTF-16 town name against villager origin town to determine if player is hometown resident vs visitor.
+    inline constexpr uintptr_t Villager_ComparePlayerIdentityWithResident = 0x00757140;
 
     // Checks equipped tool for Silver Shovel (0x335B): sets bit flag param_2[1] |= 1 on rock object to enable multi-gem mineral drop.
     inline constexpr uintptr_t Item_ApplySilverShovelRockModifier = 0x00766a5c;
@@ -832,37 +898,13 @@ namespace acnl::symbols {
     // Validates specimen category (0..5) and category-relative index bounds (fossil:67, fish:72, diving:30, insect:72, art_p:25, art_s:8)
     inline constexpr uintptr_t Museum_ValidateSpecimenIndex = 0x0076C72C;
 
+    // Returns Nook mortgage cost for building or expanding a house room (Main 39.8k/98k/198k/298k, 2F 298k/498k/598k, Basement 428k/498k/598k, Left/Right/Back 348k/498k/598k).
+    inline constexpr uintptr_t Town_GetRoomExpansionCost = 0x0076c7c8;
+
     // Verifies the CRC32 checksum of a save-file buffer. [audit 2026-09-07: length was wrongly claimed to be a variable-per-filetype DAT_ symbol; it's a hardcoded 0x25f8c at this call site — see functions/0076DFAC_*.md]
     inline constexpr uintptr_t Save_VerifySaveFileCrc32 = 0x0076dfac;
 
     // Fetches APT service handle for App module
     inline constexpr uintptr_t Core_GetAppServicePointer = 0x007b0ba0;
-
-    // Calculates monthly interest on ABD savings (0.5%, max 99,999 Bells), deposits interest to +0x6B8C, sends Mail_SP_Postoffice letter, and awards 8 tiers of savings milestone items (100k to 100M Bells).
-    inline constexpr uintptr_t PostOffice_UpdateMonthlyInterestAndSavingsRewards = 0x0062F7D0;
-
-    // Decrypts obfuscated ABD savings balance from 8-byte player struct (+0x6B8C). Validates checksum with 0xBA, applies ROL32(28 - shift), and subtracts (key + 0x8F187432).
-    inline constexpr uintptr_t Player_Abd_GetBalance = 0x00303700;
-
-    // Encrypts ABD bank balance into 8-byte player struct (+0x6B8C). Generates random 16-bit key, random shift (0..25), applies ROL32(shift + 4), and writes checksum with constant 0xBA.
-    inline constexpr uintptr_t Player_Abd_SetBalance = 0x003035C4;
-
-    // Adds deposit amount to ABD savings balance with overflow check, clamping to max limit (999,999,999 Bells).
-    inline constexpr uintptr_t Player_Abd_DepositClamped = 0x00612CD4;
-
-    // Calls Player_Abd_DepositClamped on player account (+0x6B8C) with hardcoded max limit of 999,999,999 Bells.
-    inline constexpr uintptr_t Player_Abd_AddInterest = 0x00305AD8;
-
-    // Creates special system letter from template (e.g. Mail_SP_Postoffice) with recipient, stationery, item attachment, and queue flags.
-    inline constexpr uintptr_t Mail_CreateSpecialLetter = 0x005CB34C;
-
-    // Evaluates player stumbling/tripping during running (TUMB debug tag). Checks for King Tut Mask (0x28B8) or Bad Physical Luck (DAT_00952f68 == 9). T = 450 + RNG(0..299) frames (15.0 to 25.0s). When T==1, calls Player_ExecuteTumbleTransition.
-    inline constexpr uintptr_t Player_CheckAndTriggerTumble = 0x00653EB0;
-
-    // Validates terrain height and collision obstacles ahead at 24.0f distance before executing trip. If unobstructed, triggers locomotion action 0x9F (flat fall tumble).
-    inline constexpr uintptr_t Player_ExecuteTumbleTransition = 0x00663F08;
-
-    // Maps birth month and day to one of 12 astronomical Zodiac signs (0: Capricorn .. 11: Sagittarius) using 12 cutoff date pairs at DAT_0088f142.
-    inline constexpr uintptr_t Time_GetZodiacSignFromDate = 0x0056AEE8;
 
 } // namespace acnl::symbols

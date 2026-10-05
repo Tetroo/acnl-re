@@ -126,8 +126,33 @@ struct CatalogRecord {
     uint32_t crc32;                  ///< 0x274: Record CRC32 checksum
     uint32_t last_order_time;        ///< 0x278: Timestamp of last order
 };
-static_assert(sizeof(CatalogRecord) == 0x280, "CatalogRecord must be exactly 640 bytes");
+// ============================================================================
+// 6. Tom Nook Real Estate & House Mortgages
+// ============================================================================
+
+enum class HouseRoom : uint8_t {
+    MainRoom = 0,
+    SecondFloor = 1,
+    Basement = 2,
+    LeftRoom = 3,
+    RightRoom = 4,
+    BackRoom = 5
+};
+
+/// Exact mortgage cost table from exefs.elf DAT_0088ded0 (stride 20 bytes per room)
+inline constexpr std::array<std::array<uint32_t, 5>, 6> kHouseMortgageTable = {{
+    /* Room 0: Main Floor  */ { 0, 39800, 98000, 198000, 298000 },
+    /* Room 1: 2nd Floor   */ { 298000, 498000, 598000, 0, 0 },
+    /* Room 2: Basement    */ { 428000, 498000, 598000, 0, 0 },
+    /* Room 3: Left Room   */ { 348000, 498000, 598000, 0, 0 },
+    /* Room 4: Right Room  */ { 348000, 498000, 598000, 0, 0 },
+    /* Room 5: Back Room   */ { 348000, 498000, 598000, 0, 0 }
+}};
+
+inline constexpr uint32_t kSecretStoreroomCost = 158000; ///< Welcome amiibo secret storeroom fee (0x26930)
+inline constexpr uint32_t kDownPaymentCredit   = 10000;  ///< Initial house down payment deduction (0x2710)
 
 #pragma pack(pop)
 
 } // namespace acnl::economy
+

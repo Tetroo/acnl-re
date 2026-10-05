@@ -93,13 +93,39 @@ struct BsFishFieldMgr {
 // Global Insect Manager (BsInsectFieldMgr)
 // Vtable: 0x008F0188
 struct BsInsectFieldMgr {
-    void*     vtable;                     // +0x00: 0x008F0188
-    uint8_t   pad_04[0x0F];               // +0x04..0x12
-    uint8_t   active_count;               // +0x13: Number of active insects (max 12)
-    uint8_t   pad_14[0x14];               // +0x14..0x27
-    uint8_t   insect_slots[12 * 0x144];   // +0x28..0xF57: 12 Insect actor slots (0x144 each)
-    uint8_t   special_slots[2 * 0x144];   // +0xF58..0x11DF: 2 Special event slots (bees/ants)
+    void*     vtable;                         // +0x00: vtable pointer
+    uint8_t   pad_04[0x18];                   // +0x04..0x1B
+    void*     active_insects_list;            // +0x1C: Linked list head of active insect actors
+    void*     active_slots_list;              // +0x20: Linked list head of allocated slots
+    uint8_t   pad_24[0x11D4];                 // +0x24..0x11F7
+    uint32_t  spawn_interval;                 // +0x11F8: Interval reload value for spawn timer
+    int32_t   spawn_countdown;                // +0x11FC: Per-frame countdown timer
+    uint16_t  special_critter_timer;          // +0x1200: Event/special critter countdown
+    uint8_t   pad_1202[3];                    // +0x1202..0x1204
+    uint8_t   player_proximity_counter;       // +0x1205: Checked every 11 frames (0..10)
+    uint8_t   reinit_sync_flag;               // +0x1206: Flag set to 1 when slots re-sync needed
+    uint8_t   weather_despawn_flag;           // +0x1207: Set to 1 during active weather despawn
+    uint8_t   pad_1208[0x18];                 // +0x1208..0x121F
+    struct {
+        void*   actor_ptr;                    // +0x00: Pointer to spawned insect actor instance
+        uint8_t pad_04[20];                   // +0x04..0x17
+    } insect_entries[12];                     // +0x1220..0x133F: 12 field insect actor slots (24B each)
+    struct {
+        void*   actor_ptr;                    // +0x00: Special insect actor (e.g. wasps, ants)
+        uint8_t pad_04[20];                   // +0x04..0x17
+    } special_entries[2];                     // +0x1340..0x136F: 2 special insect slots (24B each)
+    struct {
+        uint8_t flags;                        // +0x00: [6:0] category/flags (0x53 = 'S'), [7] active
+        uint8_t pad[3];                       // +0x01..0x03
+        uint8_t species_low;                  // +0x04: (species_low >> 2) + species_high * 0x40
+        uint8_t species_high;                 // +0x05
+    } slot_descriptors[12];                   // +0x1370..0x13B7: 12 slot descriptors 'H'..'S' (6B each)
 };
+static_assert(offsetof(BsInsectFieldMgr, spawn_interval) == 0x11F8, "BsInsectFieldMgr::spawn_interval offset");
+static_assert(offsetof(BsInsectFieldMgr, player_proximity_counter) == 0x1205, "BsInsectFieldMgr::player_proximity_counter offset");
+static_assert(offsetof(BsInsectFieldMgr, insect_entries) == 0x1220, "BsInsectFieldMgr::insect_entries offset");
+static_assert(offsetof(BsInsectFieldMgr, special_entries) == 0x1340, "BsInsectFieldMgr::special_entries offset");
+static_assert(offsetof(BsInsectFieldMgr, slot_descriptors) == 0x1370, "BsInsectFieldMgr::slot_descriptors offset");
 
 #pragma pack(pop)
 

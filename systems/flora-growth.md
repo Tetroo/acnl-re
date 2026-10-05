@@ -92,3 +92,31 @@ When two compatible flowers are planted adjacent (orthogonally or diagonally) an
 - **Red + Yellow Tulip** $\to$ Orange Tulip
 - **Red + Red Rose** $\to$ Black Rose (or Hybrid Red for Blue Rose lineage)
 - **Blue Rose Genetics:** Requires multi-generation recessive breeding (Orange + Purple $\to$ Special Red $\to$ Blue Rose).
+
+---
+
+## 5. Beach Seashell Spawning & Player Luck (`0x0010446C`, `0x00864764`, `[TOOL]`)
+
+When the daily rollover processes beach acres (`param_1 == 0x1E` in `Town_AdvanceFloraGrowthForPlayableAcres`), seashells are spawned into available shore tiles via `Town_ProcessFloraTileGrid_SpawnFloraCallback` (`0x0010446C`).
+
+### 5.1 Cumulative Probability Tables (`.rodata`)
+- **Table 0 (Bad Luck 7, `0x00864764`):** `(0, 0, 3, 8, 13, 16, 31, 56, 96, 100)`
+- **Table 1 (Normal Luck, `0x0086478C`):** `(2, 5, 10, 20, 30, 35, 45, 65, 95, 100)`
+- **Table 2 (Good Luck 6, `0x008647B4`):** `(5, 15, 25, 35, 45, 55, 65, 75, 90, 100)`
+
+### 5.2 Exact Species Odds
+| Item ID | Species Name | Value | Bad Item Luck | Normal Luck | Good Item Luck |
+|---|---|---|---|---|---|
+| `0x208C` | Pearl-oyster shell | 4,800 Bells | **0%** (Disabled) | **2%** | **5%** |
+| `0x208D` | Conch shell | 1,400 Bells | **0%** (Disabled) | **3%** | **10%** |
+| `0x208E` | Giant-clam shell | 1,800 Bells | **3%** | **5%** | **10%** |
+| `0x208F` | Coral | 1,000 Bells | **5%** | **10%** | **10%** |
+| `0x2090` | Venus-comb shell | 600 Bells | **5%** | **10%** | **10%** |
+| `0x2091` | Scallop shell | 2,400 Bells | **3%** | **5%** | **10%** |
+| `0x2092` | Sea-snail shell | 360 Bells | **15%** | **10%** | **10%** |
+| `0x2093` | Cowrie shell | 120 Bells | **25%** | **20%** | **10%** |
+| `0x2094` | Sand dollar | 240 Bells | **40%** | **30%** | **15%** |
+| `0x2095` | Oyster shell | 1,800 Bells | **4%** | **5%** | **10%** |
+
+Under Bad Luck, top-tier shells (`0x208C` and `0x208D`) are completely blocked from spawning, and 65% of all spawns are cheap Sand dollars or Cowrie shells. Under Good Luck, expensive shells increase to 5%–10% each.
+

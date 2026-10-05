@@ -118,7 +118,35 @@ When items are placed on the Nookling store shelves, they are assigned active di
 
 ---
 
-## 6. Function Catalog
+## 6. Tom Nook House Expansions & Mortgages
+
+House construction, room additions, and mortgage tracking are handled through Tom Nook's Real Estate agency (`0x0076C7C8`, `0x00715550`, `0x007155E8`).
+
+### 6.1 Mortgage Cost Matrix (`0x0088DED0`, `[TOOL]`)
+The binary defines a master pricing matrix (stride 20 bytes = 5 tiers $\times$ 4 bytes) for 6 distinct rooms:
+- **Room 0 (Main Room):** Initial Tent $\to$ House (39,800), 6x6 expansion (98,000), 8x8 expansion (198,000), max (298,000).
+- **Room 1 (2nd Floor):** Build 6x6 (298,000), expand to 8x8 (498,000), max (598,000).
+- **Room 2 (Basement):** Build 8x8 (428,000), expand (498,000), max (598,000).
+- **Room 3, 4, 5 (Left, Right, Back Rooms):** Build 6x6 (348,000 each), expand to 8x8 (498,000 each), max (598,000 each).
+
+### 6.2 Welcome amiibo Secret Storeroom
+- The Welcome amiibo update introduced the **Secret Storeroom** (`*(char *)(param_2 + 0x5727) < '\0'`), adding a fixed mortgage debt of **158,000 Bells** (`0x26930`).
+- Down payment credit: 10,000 Bells (`0x2710`) is subtracted from initial loans (`param_2 + 0x5704`).
+- Total remaining debt is calculated as:
+  $$\text{Debt} = \sum \text{BuiltRoomCosts} + \text{SecretStoreroom}(158\text{k}) - \text{DownPayment}(10\text{k}) - \text{Repayments}$$
+
+### 6.3 Room Progression Tracking (`0x007155E8`, `[TOOL]`)
+Each room is represented by a `0x302` (770-byte) save record. The overall house stage is evaluated by `Town_GetHouseProgressionStage`:
+- `0`: Tent
+- `1`: Initial 4x4 house
+- `2`: 6x6 main room
+- `3`: 8x8 main room
+- `4`: 2nd floor added
+- `5..9`: Additional wings added (Basement, Left, Right, Back)
+
+---
+
+## 7. Function Catalog
 
 | Address | Function Symbol | Description |
 |---|---|---|
@@ -134,3 +162,8 @@ When items are placed on the Nookling store shelves, they are assigned active di
 | `0x001E4CF4` | `Shop_BuyDisplayItem` | Processes item purchase and replaces entity with Sold Out marker (`0x2083`) |
 | `0x0056C548` | `RecycleShop_InitDailyPremiumItem` | Randomizes and assigns daily premium double-price item for Re-Tail |
 | `0x0056C634` | `RecycleShop_InitFleaMarketStalls` | Initializes the 8 flea market selling tables inside Re-Tail |
+| `0x0076C7C8` | `Town_GetRoomExpansionCost` | Queries Nook mortgage cost for building or expanding house rooms |
+| `0x00715550` | `Town_CalculatePlayerRemainingDebt` | Calculates total outstanding mortgage balance including Secret Storeroom (158k) |
+| `0x007155E8` | `Town_GetHouseProgressionStage` | Determines player house stage (0=tent .. 9=fully expanded estate) |
+| `0x0071F3D4` | `Town_HouseIsRoomActive` | Validates if a house room record is built and active |
+

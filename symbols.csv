@@ -2,6 +2,7 @@ Address,Name,Subsystem,Status,Description
 0x001003bc,Weather_InitWeatherHeap,Weather,done,Initializes heap for weather sub-system
 0x00100684,Time_StateManagerUpdateTick,Time,partial,"Per-frame update tick for a state manager object. Flushes pending state transitions across multiple subsystems, then che"
 0x001009e4,Weather_CleanupWeatherHeap,Weather,done,Cleans up and destructs weather heap objects
+0x0010446c,Town_ProcessFloraTileGrid_SpawnFloraCallback,Town,done,"Beach seashell & flora spawner: picks 1 of 10 seashell species (0x208C..0x2095) via cumulative tables based on player item luck (Table 0 Bad, Table 1 Normal, Table 2 Good)."
 0x0011253C,Save_InitVillagersBlock,Save,done,"Initializes the 142,284-byte villager save region (10 resident slots + newcomer moving queue)"
 0x00112584,Town_GridSubObjectConstructor,Town,partial,"First sub-ctor called in FUN005ca4f4's chain, at param1 = iVar1 + 0x29200 (where iVar1 is the cursor after the initial D"
 0x00114e10,Town_AdvanceFloraGrowthForPlayableAcres,Town,partial,"AUDIT 2026-09-07: does NOT iterate all 20 acres -- picks ONE random eligible acre via bounded RNG and processes it via Town_ProcessFloraTileGrid, then returns early. See systems/flora-growth.md."
@@ -75,7 +76,7 @@ Address,Name,Subsystem,Status,Description
 0x001f4de8,Actor_AcObjectBase_Update,Actor,done,"Per-frame entity tick: resets visual offset, executes behavior state machine (+0x60), updates physics/movement (+0x64), and calls post-update hook (+0x50)."
 0x001f4ebc,Actor_AcObjectBase_BuildMatrix,Actor,done,Constructs 4x3 affine transform matrix from position Vector3 and applies XYZ Euler rotation angles via trigonometric LUT.
 0x001f50c0,Actor_AcObjectBase_Dtor,Actor,done,Deleting destructor for AcObjectBase. Invokes Actor_Actor_Dtor and deallocates instance memory via operator delete.
-0x001FE740,Weather_BsThunderMgr_GenerateMinuteStrikes,Weather,partial,Clears 60-byte per-minute strike buffer and caches time on weather-type branch; strike pattern generation source not yet located (audited 2026-09-07)
+0x001FE740,Weather_BsThunderMgr_GenerateMinuteStrikes,Weather,done,Generates 60-byte minute strike bitmap at +0x13 in thunderstorm; seeds Xorshift128 PRNG with date and TownID (+0x621b8) and spaces strikes by 3..9 min intervals.
 0x001FE8DC,Weather_BsThunderMgr_TickLightning,Weather,done,"Evaluates current second against bitmap, flashes screen, and plays indoor/outdoor thunder SE"
 0x001FE9F0,Weather_BsThunderMgr_Init,Weather,done,"Initializes BsThunderMgr actor (size 0x64, vtable 0x008EC120)"
 0x00200d34,Town_FieldFactory_CreateBuilderForState,Town,done,"Master factory dispatcher (dFieldFactory.cpp) that instantiates the appropriate FieldBuilder (VillagePrologueBuilder, MuseumBuilder, CampNpcBuilder, etc.) based on game state flags."
@@ -85,7 +86,7 @@ Address,Name,Subsystem,Status,Description
 0x00229D10,Weather_BsWeatherRain_UpdateParticles,Weather,done,"Calculates active rain particle count (32 for light, 128 for storm) with 30s linear crossfade"
 0x0022a9c8,Weather_UpdateSnowParticles,Weather,done,Updates snow particle simulation state
 0x0022AFA0,Weather_BsWeatherSnow_UpdateParticles,Weather,done,"Calculates active snow particle count (100 for light, 400 for blizzard) with 30s linear crossfade"
-0x0022eba4,Time_PeriodicTimerCheck,Time,flagged,Address does not resolve in Ghidra (re-audit 2026-09-07) - was: Timer/tick-based check function. Uses SVC 0x28 (GetSystemTick) and divides by 0x1a/0x5a constants. Calls FUN00300fdc onl
+0x0022eba4,Time_PeriodicTimerCheck,Time,done,Performs periodic system tick sanity check via SVC 0x28 (svcGetSystemTick); verifies elapsed ticks against 0x5a threshold and updates save buffer on state change.
 0x0023D5F0,Player_EvaluateDailyLuckAndModifiers,Player,done,Evaluates player daily luck and checks lucky item (tag 0x98) in 16 pocket slots. Decrements odd/bad luck by 1 (e.g. 9->8) to negate negative effects. Evaluates Feng Shui (source 3).
 0x0023D750,Player_CalculateDailyLuckType,Player,done,"Computes daily luck category index (0..9) from player birthday month/day (Zodiac sign 0..11 via 0x0056AEE8), calendar date, and day-of-week indexing 70x12 matrix UNK_00880a64."
 0x00244884,Time_SetdatetimebgConstructor,Time,partial,Constructor for the SetDateTimeBg UI screen - the in-game date/time settings screen. Sets up UI components: input fields
@@ -109,9 +110,13 @@ Address,Name,Subsystem,Status,Description
 0x0027c8fc,Town_GenerateTownLayout_4Options,Town,partial,"Generates candidate town seed. 3-state layout generator with internal validation counters; exact semantics of validation counts (villagers/plaza/hall) unconfirmed by bytes, see functions/ audit note."
 0x0028de1c,Save_DispatchSaveWriteStateMachine,Save,partial,"State machine dispatcher with a save write path. At case 1, calls FUN00300fdc to access the save buffer - likely the wri"
 0x002960d0,Weather_UpdateSakuraParticles,Weather,done,Updates cherry blossom sakura particle simulation
+0x002ab3c0,Insect_BsInsectFieldMgr_TickSpawnTimer,Item,done,Ticks insect spawn countdown timer at +0x11fc; reloads from +0x11f8 and triggers insect spawn attempt.
 0x002abfe0,Insect_BsInsectFieldMgr_CheckWeatherDespawn,Item,done,Checks rain and snow weather flags; automatically despawns flying ('A') and ground ('F'/'G') insects.
+0x002ac170,Insect_BsInsectFieldMgr_SyncSlotsAndDespawnMismatch,Item,done,Synchronizes 12 insect slots (H..S) with active actors and despawns species mismatches.
+0x002ac5e0,Insect_BsInsectFieldMgr_CheckPlayerProximityAndScare,Item,done,Every 11 frames (+0x1205) calculates squared distance to all 4 players; triggers scare vtable[0xb0] if < scare_radius^2.
 0x002acb7c,Insect_BsInsectFieldMgr_UpdateBugLoop,Item,done,Main update tick for insect manager: manages 12 concurrent slots ('H'..'S') and updates active bug AI.
 0x002AD780,Item_BsInsectFieldMgr_ctor,Item,done,Constructs BsInsectFieldMgr with 12 normal slots (0x144 each) and 2 special event slots (wasps/ants)
+0x002adc10,Core_BsLightPointFix_Vtbl09,Core,partial,Virtual method slot 9 of BsLightPointFix (address was previously recorded incorrectly as mid-body 0x002adcc8 in 2026-09-07 audit).
 0x002ADCC8,Item_BsInsectFieldMgr_Update,Item,flagged,"AUDIT 2026-09-07: address is mid-body of Core_BsLightPointFix_Vtbl09 (entry 0x002adc10), not a function start. Description was fabricated. Likely real function: 0x002acb7c Insect_BsInsectFieldMgr_UpdateBugLoop -- needs confirmation before reuse."
 0x002b32f4,Town_InitBsMenuMapVillage,Town,partial,State machine (states 0-10) that loads and initialises the Town Map menu screen (Nook's Homes / Town Hall bulletin board
 0x002b385c,Town_LookupTownMapPane,Town,partial,"Looks up the single named layout pane ""Pmp00"" within the loaded mapvillage.arc layout (state 8 of FUN002b32f4's init sta"
@@ -145,8 +150,11 @@ Address,Name,Subsystem,Status,Description
 0x002ffd1c,Town_ProcessFloraTileGrid,Town,done,"Scans 16x16 tile grid of an acre: advances sapling stages 0..3, wilts unwatered flowers, breeds hybrids."
 0x00300fdc,Save_GetSaveBufferWithPreCheck,Save,partial,Second getter for the gardenplus.dat runtime buffer. Calls FUN006064bc as a pre-flight check before returning the buffer
 0x00301ebc,Town_CheckVillagerSlotValidity,Town,done,Called from FUN005c9a24 (villager slot reader) as the per-slot gate that decides whether a villager slot is occupied/val
+0x003035C4,Player_Abd_SetBalance,Player,done,"Encrypts ABD bank balance into 8-byte player struct (+0x6B8C). Generates random 16-bit key, random shift (0..25), applies ROL32(shift + 4), and writes checksum with constant 0xBA."
+0x00303700,Player_Abd_GetBalance,Player,done,"Decrypts obfuscated ABD savings balance from 8-byte player struct (+0x6B8C). Validates checksum with 0xBA, applies ROL32(28 - shift), and subtracts (key + 0x8F187432)."
 0x00303d80,Player_ConstructPlayerTailObject,Player,in_progress,Initialises a different-typed object at offset +0x1b80 within the player region. Called once per player by FUN006f4234 a
 0x00304f70,Save_Thunk_AllocateAndConstructSaveBuffer,Save,done,Thunk redirecting to Save_AllocateAndConstructSaveBuffer (0x005c9dd4)
+0x00305AD8,Player_Abd_AddInterest,Player,done,"Calls Player_Abd_DepositClamped on player account (+0x6B8C) with hardcoded max limit of 999,999,999 Bells."
 0x0030601c,Core_ReadGameStateFlag,Core,partial,Reads a single byte from the main game state object at a fixed offset. Used as a condition gate in FUN0062eee8 - if resu
 0x00308D08,Save_InitSingleVillagerRecord,Save,done,"Initializes an individual 9,496-byte villager save record (furniture, letters, 4 player relation records)"
 0x00308f5c,Time_NormalizeDate,Time,done,Normalizes a date object in-place. Called by FUN0062EF1C on both the input date and the current time before comparison.
@@ -159,10 +167,13 @@ Address,Name,Subsystem,Status,Description
 0x0051FD40,Actor_GetActorMetaByIndex,Core,done,Fetches 12-byte metadata entry for given actor index (bounds-checked against 669)
 0x0051FD74,Actor_InvokeFactoryByIndex,Core,done,Invokes 8-byte entry factory/constructor method from 0x00954DA4 for given actor index
 0x00523378,Msg_LoadSwkbdMsbt,Script,done,Loads software keyboard localized text swkbd.msbt and style RI.mstl based on active language index
+0x0055bb14,Core_Prng_InitXorShift128,Core,done,Initializes 128-bit PRNG state from 32-bit seed using Knuth/Mersenne multiplier 0x6c078965.
+0x0055bbb0,Core_Prng_NextXorShift128,Core,done,"Standard 128-bit Xorshift PRNG generator with shift parameters (11, 8, 19)."
 0x0056a74c,Time_PeriodicTimeUpdater,Time,done,Periodically updates the global time singleton object at DAT0056a928 → 0x00AD46B0. This is the function that keeps the i
 0x0056aa90,Time_ConvertHardwareRtcToGameDate,Time,partial,"NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056aa90) despite done status here. Real decompile calls Time_JulianDaySubFieldCalculator/ConvertTicksToDate/ConvertTicksToWallClock - plausible but unconfirmed RTC link, no direct SVC call visible."
 0x0056abe0,Time_GetEpochDate2012,Time,partial,NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056abe0) despite done status here. Body not re-verified this pass.
 0x0056ac80,Time_GetSeasonPeriodIndex,Time,done,Returns a period index (0-22) representing where the current date falls within the annual season calendar. Used by FUN00
+0x0056AEE8,Time_GetZodiacSignFromDate,Time,done,Maps birth month and day to one of 12 astronomical Zodiac signs (0: Capricorn .. 11: Sagittarius) using 12 cutoff date pairs at DAT_0088f142.
 0x0056bbd4,Time_NormalizeYearRange_2050Limit,Time,done,This function is the direct source of the 2050 date limit.
 0x0056bfd8,Time_Check6AmDailyRolloverBoundary,Time,partial,FABRICATED description (audited 2026-09-07): NOT renamed in Ghidra (still FUN_0056bfd8). Real decompile has nothing to do with hour/6AM - it validates year>=2012 and month/day fields then calls Core_ErrorAbortHandler on failure. See systems/time-engine.md audit note.
 0x0056c288,Time_SetPlayerTimeTravelOffset,Time,partial,"NOT renamed in Ghidra as of 2026-09-07 audit (still FUN_0056c288) despite done status here. Real decompile plausibly matches (writes offset, clamps [2012,2050] via NormalizeYearRange_2050Limit) but 'title screen settings' origin is inferred, not confirmed from callers."
@@ -185,6 +196,7 @@ Address,Name,Subsystem,Status,Description
 0x005B0870,Msg_MsbfWrapper_Destroy,Script,done,Releases MSBF wrapper descriptor and clears buffer references
 0x005B0898,Msg_MsbfWrapper_Clear,Script,done,Zeroes out internal wrapper buffer and state fields
 0x005b2fe0,Weather_MapStateIndexToWeatherType,Weather,done,Converts a raw state index (from FUN002F755C) into a weather type integer used by the record index formula in FUN001E63D
+0x005c507c,Town_SendIsabelleAnniversaryReward,Town,done,Isabelle sends town tree anniversary commemorative mail Mail_SP_Secretary with sapling clock item 0x3042 attached.
 0x005c96a0,Core_IncrementNonZero64BitCounter,Core,done,"Increments a 64-bit counter (DAT005c96dc as {uint32 lo; uint32 hi;}) by 1, with special-case logic to skip the value 0 o"
 0x005c9760,Save_LoadLazySaveResource,Save,partial,c void FUN005c9760(void) { puVar1 = DAT005c97b4; // struct ptr if (DAT005c97b4[1] == 0) { // lazy-init check: not yet lo
 0x005c9a24,Town_ReadVillagerSlots,Town,partial,"Iterates over all 10 villager slots in the save buffer. For each slot, reads a uint16 field at offset +0x2c and writes i"
@@ -192,6 +204,7 @@ Address,Name,Subsystem,Status,Description
 0x005c9dd4,Save_AllocateAndConstructSaveBuffer,Save,partial,"Allocates the runtime save buffer, constructs C++ objects in-place, then initializes their fields. Paired with FUN0012cc"
 0x005ca2c4,Town_ResetSaveBuffer_AllSubObjects,Town,partial,"Resets TownAcres, playable grids, villager array, and player slots to default values. [audit 2026-09-07: one call was misattributed, list was non-exhaustive — see functions/005CA2C4_*.md]"
 0x005ca4f4,Save_SaveObjectMasterConstructor,Save,partial,The primary C++ object constructor for the gardenplus.dat buffer. Called from FUN005c9dd4 with param1 = buffer + 0x80. C
+0x005CB34C,Mail_CreateSpecialLetter,Save,done,"Creates special system letter from template (e.g. Mail_SP_Postoffice) with recipient, stationery, item attachment, and queue flags."
 0x005ccdc8,Save_SaveBufferSubRegionConstructor,Save,partial,"Initialises the C++ object region immediately after the 167,936-byte raw data block in the save buffer. Called from FUN0"
 0x005D3734,System_GetLanguageIndex,System,done,Resolves hardware region (Japan=0 USA=1 Europe=2) and language to return game language index (0..9) for MSBT localization
 0x005F2614,FlowSeq_ExecuteMessageNode,Script,done,Unpacks Type 1 message node binds dialogue string and opens villager text box with emotion animation
@@ -205,6 +218,7 @@ Address,Name,Subsystem,Status,Description
 0x006079b8,Core_UiRenderingFunction,Core,partial,Performs rendering or UI operations using a sub-object at param1 + 0x18. Calls FUN00300fdc but discards the return value
 0x00611d34,Town_SetDefaultAcreId_109,Town,done,Sets uint16 acre ID to 0x109. Called for all 42 entries in the 7x6 TownAcres grid.
 0x00612820,Town_InitTownGridAndAcres,Town,done,SOLVED TOWN ACRES RUNTIME HANDLER. Initializes 7x6 TownAcres (0x53484) and 5x4 playable acres.
+0x00612CD4,Player_Abd_DepositClamped,Player,done,"Adds deposit amount to ABD savings balance with overflow check, clamping to max limit (999,999,999 Bells)."
 0x0061494c,Weather_GetWeatherPatternData,Weather,partial,Returns a pointer to the global weather data source object. The object contains weather pattern records of size 0x8C (14
 0x0062e084,Weather_Thunk_ResolveWeatherType,Weather,partial,Not a thunk (audited 2026-09-07) - full duplicate of the 52x24 weather-type table lookup in FUN0062E094 but using current time singleton instead of explicit date param
 0x0062e094,Weather_ResolveWeatherType_52x24,Weather,partial,Resolves weather type byte from a 52x24 lookup table indexed by period index (0-51) and normalised hour (0-23). Called t
@@ -214,11 +228,14 @@ Address,Name,Subsystem,Status,Description
 0x0062ef1c,Weather_ResolveWeatherPeriodIndex,Weather,partial,"Given a date object (param1), resolves and returns a period index used by the weather table lookup system (FUN0062E094)."
 0x0062efd4,Weather_ResolveIslandWeatherWeekIndex,Weather,done,"Resolves weather row for Tortimer Island using 3-day cyclic table [4, 21, 33] indexed by JulianDay % 3."
 0x0062F4F4,Weather_CheckMeteorShowerActiveHours,Weather,done,Checks if current weather is clear and time is between 19:00 and 04:00 for shooting stars
+0x0062F7D0,PostOffice_UpdateMonthlyInterestAndSavingsRewards,PostOffice,done,"Calculates monthly interest on ABD savings (0.5%, max 99,999 Bells), deposits interest to +0x6B8C, sends Mail_SP_Postoffice letter, and awards 8 tiers of savings milestone items (100k to 100M Bells)."
 0x0064B410,Npc_AcNpcNml_ctor,Npc,done,"Constructs AcNpcNml animal villager actor, binds vtable 0x008F7304 and initializes animation components"
 0x0064BC6C,Player_UpdatePreviousCoords,Player,done,Caches previous frame 3D coordinates and facing rotation for interpolation and movement delta calculations
 0x0064BE70,Player_ResolveToolActionTarget,Player,done,Tests equipped tool target flags against interaction candidate resolving shovel dig fish water or bug net catch action
 0x0064F26C,Player_BuildWorldMatrix,Player,done,Computes player world transform matrix and enqueues matrix to the active scene draw list
+0x00653EB0,Player_CheckAndTriggerTumble,Player,done,"Evaluates player stumbling/tripping during running (TUMB debug tag). Checks for King Tut Mask (0x28B8) or Bad Physical Luck (DAT_00952f68 == 9). T = 450 + RNG(0..299) frames (15.0 to 25.0s). When T==1, calls Player_ExecuteTumbleTransition."
 0x006540B8,Player_UpdateStateMachine,Player,done,Evaluates locomotion state machine transitioning between walk run net sneak swim and dive states
+0x00663F08,Player_ExecuteTumbleTransition,Player,done,"Validates terrain height and collision obstacles ahead at 24.0f distance before executing trip. If unobstructed, triggers locomotion action 0x9F (flat fall tumble)."
 0x00680E00,Player_PerformStarWish,Player,done,Triggers star wish attempt when player presses A without tools looking at sky
 0x006828bc,Player_HitStoneWithShovel,Player,done,"Dispatches shovel strike on stone: checks distance <= 32.0f, invokes Town_ProcessShovelHitOnStone, triggers bounce-back recoil."
 0x0068b9bc,Player_AcPlayer_Draw,Player,done,"Renders player character model, applies texture swaps for facial expressions, and projects dynamic circular shadow with radius scaled by 13.0f."
@@ -242,7 +259,10 @@ Address,Name,Subsystem,Status,Description
 0x006f4234,Save_PlayerRegionSubObjectInitializer,Save,done,Initialises the array of 10+1 sub-structs within a player's save region. Called once per player in FUN005c9dd4's 4-playe
 0x006f7c54,Core_GetStateSubObjectFlag4000,Core,done,Returns a state-specific sub-object if bit 0x4000 is set for the given state index. Used in FUN005B2FE0 to handle weathe
 0x0070d894,Town_UiStringBuilderForSaveFileLabels,Town,partial,[audit 2026-09-07: prior /garden.dat string-source claim did not match live decompile — see functions/0070D894_*.md]
+0x00715550,Town_CalculatePlayerRemainingDebt,Town,done,"Calculates player outstanding house mortgage by summing built room tiers across 6 rooms (0x302 byte save records), adding 158k for Welcome amiibo Secret Storeroom (+0x5727), subtracting 10k down payment and repayments."
+0x007155e8,Town_GetHouseProgressionStage,Town,done,"Calculates house progression stage (0=tent, 1=initial 4x4, 2=6x6, 3=8x8, 4=2F added, 5..9=additional rooms count)."
 0x0071ee44,Save_SaveBufferErrorAbort,Save,done,"Calls FUN00300fdc (result unused) then immediately calls the non-returning FUN002faec0. This is an error/abort path, not"
+0x0071f3d4,Town_HouseIsRoomActive,Town,done,Checks if a house room is built and active (status byte at +0x1E != 1 and != 5).
 0x0071f3ec,Core_ReadStructArrayLevelField,Core,done,"Reads a single byte from a struct array: field +0x36 of element param2. Used to check ""level"" values for state sub-objec"
 0x00756c34,Save_SerializeSaveBuffer_CalculateChecksums,Save,done,"Calls CalculateSubObjectChecksums across all save regions, then updates small map state."
 0x00756c54,Save_DeserializeSaveBuffer_ValidateChecksums,Save,done,Calls ValidateSubObjectChecksums to verify CRC32 of all save sub-objects on load.
@@ -251,6 +271,8 @@ Address,Name,Subsystem,Status,Description
 0x007570D0,Villager_CheckIsBestFriend,Villager,done,"Checks if relationship state bits [2:0] equal 3 (Best Friend tier, picture reward eligible)"
 0x00757108,Villager_CheckSpokenToday,Villager,done,Checks bit 5 of relationship state byte to enforce once-per-day friendship conversation reward
 0x0075711C,Villager_CheckSlotEmpty,Villager,done,Checks if relationship state bits [2:0] equal 0 (unassigned / empty resident slot)
+0x00757130,Villager_GetGiftExchangeTier,Villager,done,Extracts item/gift exchange tier (bits [4:3]) from player-villager relation byte +0x270.
+0x00757140,Villager_ComparePlayerIdentityWithResident,Villager,done,"Compares player TownID (+0x621B8), gender (+0x621CC), and UTF-16 town name against villager origin town to determine if player is hometown resident vs visitor."
 0x00766a5c,Item_ApplySilverShovelRockModifier,Item,done,Checks equipped tool for Silver Shovel (0x335B): sets bit flag param_2[1] |= 1 on rock object to enable multi-gem mineral drop.
 0x00767150,Villager_SetGiftExchangeStatus,Villager,done,Sets bits [4:3] of relationship state byte during item/present trades and records item ID
 0x00767B44,Item_GetFossilDinosaurGroupId,Museum,done,Reads multi-part dinosaur skeleton group ID from item metadata offset +0x12
@@ -275,14 +297,6 @@ Address,Name,Subsystem,Status,Description
 0x0076C5C8,Museum_CalculateArtCompletionPercentage,Museum,done,Computes art gallery completion percentage: (art_donations * 100) / 33
 0x0076C680,Museum_GetSpecimenDonationStatus,Museum,done,"Returns donation flag byte (0=uncollected, 1..4=donated by player 0..3, 5=special/town donation)"
 0x0076C72C,Museum_ValidateSpecimenIndex,Museum,done,"Validates specimen category (0..5) and category-relative index bounds (fossil:67, fish:72, diving:30, insect:72, art_p:25, art_s:8)"
+0x0076c7c8,Town_GetRoomExpansionCost,Town,done,"Returns Nook mortgage cost for building or expanding a house room (Main 39.8k/98k/198k/298k, 2F 298k/498k/598k, Basement 428k/498k/598k, Left/Right/Back 348k/498k/598k)."
 0x0076dfac,Save_VerifySaveFileCrc32,Save,partial,Verifies the CRC32 checksum of a save-file buffer. [audit 2026-09-07: length was wrongly claimed to be a variable-per-filetype DAT_ symbol; it's a hardcoded 0x25f8c at this call site — see functions/0076DFAC_*.md]
 0x007b0ba0,Core_GetAppServicePointer,Core,done,Fetches APT service handle for App module
-0x0062F7D0,PostOffice_UpdateMonthlyInterestAndSavingsRewards,PostOffice,done,"Calculates monthly interest on ABD savings (0.5%, max 99,999 Bells), deposits interest to +0x6B8C, sends Mail_SP_Postoffice letter, and awards 8 tiers of savings milestone items (100k to 100M Bells)."
-0x00303700,Player_Abd_GetBalance,Player,done,"Decrypts obfuscated ABD savings balance from 8-byte player struct (+0x6B8C). Validates checksum with 0xBA, applies ROL32(28 - shift), and subtracts (key + 0x8F187432)."
-0x003035C4,Player_Abd_SetBalance,Player,done,"Encrypts ABD bank balance into 8-byte player struct (+0x6B8C). Generates random 16-bit key, random shift (0..25), applies ROL32(shift + 4), and writes checksum with constant 0xBA."
-0x00612CD4,Player_Abd_DepositClamped,Player,done,"Adds deposit amount to ABD savings balance with overflow check, clamping to max limit (999,999,999 Bells)."
-0x00305AD8,Player_Abd_AddInterest,Player,done,"Calls Player_Abd_DepositClamped on player account (+0x6B8C) with hardcoded max limit of 999,999,999 Bells."
-0x005CB34C,Mail_CreateSpecialLetter,Save,done,"Creates special system letter from template (e.g. Mail_SP_Postoffice) with recipient, stationery, item attachment, and queue flags."
-0x00653EB0,Player_CheckAndTriggerTumble,Player,done,"Evaluates player stumbling/tripping during running (TUMB debug tag). Checks for King Tut Mask (0x28B8) or Bad Physical Luck (DAT_00952f68 == 9). T = 450 + RNG(0..299) frames (15.0 to 25.0s). When T==1, calls Player_ExecuteTumbleTransition."
-0x00663F08,Player_ExecuteTumbleTransition,Player,done,"Validates terrain height and collision obstacles ahead at 24.0f distance before executing trip. If unobstructed, triggers locomotion action 0x9F (flat fall tumble)."
-0x0056AEE8,Time_GetZodiacSignFromDate,Time,done,"Maps birth month and day to one of 12 astronomical Zodiac signs (0: Capricorn .. 11: Sagittarius) using 12 cutoff date pairs at DAT_0088f142."
